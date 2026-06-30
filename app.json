@@ -39,6 +39,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d5bccfde-d49e-471b-aeec-8f8515ac4b74"
+      }
+    },
+    "owner": "bantitabonyarids-team"
   }
 }
