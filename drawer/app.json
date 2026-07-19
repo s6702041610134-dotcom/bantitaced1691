@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "bantitaced1691",
-    "slug": "bantitaced1691",
+    "name": "drawer",
+    "slug": "drawer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bantitaced1691",
+    "scheme": "drawer",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -29,24 +29,14 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
         }
-      ],
-      "expo-status-bar"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "d5bccfde-d49e-471b-aeec-8f8515ac4b74"
-      }
-    },
-    "owner": "bantitabonyarids-team"
+    }
   }
 }
