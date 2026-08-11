@@ -5,12 +5,9 @@ import React from "react";
 import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// On Web, use standard View to avoid React 19 NativeSafeAreaProvider DOM crash
-const SafeProvider = Platform.OS === "web" ? View : SafeAreaProvider;
-
 export default function RootLayout() {
-  return (
-    <SafeProvider style={{ flex: 1 }}>
+  const content = (
+    <View style={{ flex: 1, backgroundColor: "#081324" }}>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -24,6 +21,13 @@ export default function RootLayout() {
         <Stack.Screen name="phoneDetail" />
       </Stack>
       <BottomNavDrawer />
-    </SafeProvider>
+    </View>
   );
+
+  // On Web, return pure View to bypass NativeSafeAreaProvider completely
+  if (Platform.OS === "web") {
+    return content;
+  }
+
+  return <SafeAreaProvider>{content}</SafeAreaProvider>;
 }
