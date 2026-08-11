@@ -1,8 +1,8 @@
 import Card from "@/components/card";
 import MetallicSpiderBg from "@/components/MetallicSpiderBg";
 import api from "../utils/crud-api";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -26,9 +26,11 @@ export default function Index() {
   const [data, setData] = useState<PhoneItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getData();
+    }, [])
+  );
 
   const getData = async () => {
     try {
