@@ -36,7 +36,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "server": "npx json-server --port 3008 phone-server/phones.json",
+    "server": "npx json-server --host 0.0.0.0 --port 3008 phone-server/phones.json",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
