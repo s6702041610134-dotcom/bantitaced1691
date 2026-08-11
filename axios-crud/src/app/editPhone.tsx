@@ -59,7 +59,7 @@ const EditPhone = () => {
         tel: newTel.trim(),
         img: newImg.trim(),
       });
-      router.navigate("/");
+      router.replace("/");
     } catch (err) {
       console.log("UPDATE ERROR:", err);
       Alert.alert("ERROR", "Failed to update phone record.");

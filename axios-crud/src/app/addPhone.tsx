@@ -58,7 +58,7 @@ export default function AddPhone() {
       setSect("CED");
       setTel("");
       setImg(PRESET_AVATARS[0].url);
-      router.navigate("/");
+      router.replace("/");
     } catch (err) {
       console.log("ADD PHONE ERROR:", err);
       Alert.alert("ERROR", "Failed to add phone record.");

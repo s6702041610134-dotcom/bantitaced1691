@@ -20,7 +20,7 @@ export default function MetallicSpiderBg({ children }: Props) {
       <View style={[styles.gradientShader, webGradientStyle]} />
 
       {/* Spiderweb Lines Layer - Top Left Web */}
-      <View style={[styles.spiderWebCorner, styles.topLeftWeb]} pointerEvents="none">
+      <View style={[styles.spiderWebCorner, styles.topLeftWeb, { pointerEvents: "none" }]}>
         <View style={styles.webSpoke1} />
         <View style={styles.webSpoke2} />
         <View style={styles.webSpoke3} />
@@ -33,7 +33,7 @@ export default function MetallicSpiderBg({ children }: Props) {
       </View>
 
       {/* Spiderweb Lines Layer - Top Right Web */}
-      <View style={[styles.spiderWebCorner, styles.topRightWeb]} pointerEvents="none">
+      <View style={[styles.spiderWebCorner, styles.topRightWeb, { pointerEvents: "none" }]}>
         <View style={styles.webSpoke1} />
         <View style={styles.webSpoke2} />
         <View style={styles.webSpoke3} />
@@ -45,7 +45,7 @@ export default function MetallicSpiderBg({ children }: Props) {
       </View>
 
       {/* Spiderweb Lines Layer - Bottom Center Web */}
-      <View style={[styles.spiderWebCorner, styles.bottomCenterWeb]} pointerEvents="none">
+      <View style={[styles.spiderWebCorner, styles.bottomCenterWeb, { pointerEvents: "none" }]}>
         <View style={styles.webSpoke1} />
         <View style={styles.webSpoke2} />
         <View style={styles.webSpoke3} />
