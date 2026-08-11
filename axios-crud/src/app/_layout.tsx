@@ -1,11 +1,16 @@
 import BottomNavDrawer from "@/components/BottomNavDrawer";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context"; // 1. Import เข้ามา
+import React from "react";
+import { Platform, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// On Web, use standard View to avoid React 19 NativeSafeAreaProvider DOM crash
+const SafeProvider = Platform.OS === "web" ? View : SafeAreaProvider;
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider> {/* 2. ครอบแอปทั้งหมดไว้ที่ Root */}
+    <SafeProvider style={{ flex: 1 }}>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -19,6 +24,6 @@ export default function RootLayout() {
         <Stack.Screen name="phoneDetail" />
       </Stack>
       <BottomNavDrawer />
-    </SafeAreaProvider>
+    </SafeProvider>
   );
 }
