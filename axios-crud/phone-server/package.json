@@ -1,0 +1,16 @@
+{
+  "name": "server_api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec json-server -p 3008 phones.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "json-server": "^1.0.0-beta.15",
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "phones": [
+    {
+      "name": "Steve Davis",
+      "sect": "TCT",
+      "tel": "088-886-9845",
+      "id": "MfxT-wU6kf4"
+    },
+    {
+      "name": "John Doe",
+      "sect": "TCT",
+      "tel": "084-965-4528",
+      "id": "lDFxrpGYDZs"
+    },
+    {
+      "name": "Eric Johnson",
+      "sect": "CED",
+      "tel": "02-304-6942",
+      "id": "E66dcvN4Q7Y"
+    },
+    {
+      "id": "VatAdjDSg1Q",
+      "name": "Nene Royal",
+      "sect": "CED",
+      "tel": "087-985-3542"
+    },
+    {
+      "id": "OrrKoF7efIY",
+      "name": "Test User",
+      "sect": "CED",
+      "tel": "0812345678",
+      "img": ""
+    },
+    {
+      "name": "Spider-Man",
+      "sect": "CED",
+      "tel": "0812345678",
+      "img": "",
+      "id": "hg7aiwvoF0c"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

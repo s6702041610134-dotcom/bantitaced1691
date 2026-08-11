@@ -1,0 +1,26 @@
+{ "cd": [
+        {
+            "id": "the dark side of the moon",
+            "album": "The Dark Side of the Moon",
+            "artist": "Pink Floyd",
+            "year": "1973"
+        },
+        
+        {
+            "id": "the great gig in the sky",
+            "album": "The Great Gig in the Sky",
+            "artist": "tyla",
+            "year": "2025"
+        }
+
+    ],
+
+     "dvd":[
+            { "id": "the great gig in the sky",
+            "album": "The Great Gig in the Sky",
+            "artist": "tyla",
+            "year": "2025"
+            } 
+    ]
+
+}
