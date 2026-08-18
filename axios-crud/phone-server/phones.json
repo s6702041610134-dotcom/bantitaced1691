@@ -37,6 +37,13 @@
       "tel": "0812345678",
       "img": "",
       "id": "hg7aiwvoF0c"
+    },
+    {
+      "id": "csDyGtZgJ78",
+      "name": "bantita",
+      "sect": "CED",
+      "tel": "67",
+      "img": "https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=400&q=80"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

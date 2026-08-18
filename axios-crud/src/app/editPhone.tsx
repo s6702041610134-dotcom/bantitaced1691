@@ -1,5 +1,4 @@
 import MetallicSpiderBg from "@/components/MetallicSpiderBg";
-import api from "../utils/crud-api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -15,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
+import api from "../utils/crud-api";
 
 const PRESET_AVATARS = [
   {

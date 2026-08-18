@@ -1,12 +1,10 @@
 import MetallicSpiderBg from "@/components/MetallicSpiderBg";
-import api from "../utils/crud-api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
   Image,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +13,9 @@ import {
   View,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ Import จาก safe-area-context
 import { v4 as uuidv4 } from "uuid";
+import api from "../utils/crud-api";
 
 const PRESET_AVATARS = [
   {
@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
+    paddingBottom: 40,
     flexGrow: 1,
-    justifyContent: "space-between",
   },
   legendHeader: {
     flexDirection: "row",
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "#4E86C7",
-    padding: 20,
+    padding: 16,
     elevation: 5,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 4px 12px rgba(0,0,0,0.3)" }
