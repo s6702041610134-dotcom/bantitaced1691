@@ -261,23 +261,67 @@ export default function MapScreen() {
       return;
     }
 
-    // Capture Map Snapshot for receipt image
+    // 1. Fit map to display all visited places and routes
+    if (mapRef.current && places.length > 0) {
+      mapRef.current.fitToCoordinates(
+        places.map((p) => p.coordinate),
+        {
+          edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
+          animated: false,
+        }
+      );
+    }
+
+    // 2. Short pause to allow map view to finish rendering fitted bounds
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // 3. Calculate fallback static map URL (OSM Static Map Service)
+    const avgLat = places.reduce((sum, p) => sum + p.coordinate.latitude, 0) / places.length;
+    const avgLon = places.reduce((sum, p) => sum + p.coordinate.longitude, 0) / places.length;
+    const markersParam = places.map(p => `${p.coordinate.latitude},${p.coordinate.longitude},ol-marker`).join('|');
+    const fallbackStaticUri = `https://staticmap.openstreetmap.de/staticmap.php?center=${avgLat.toFixed(4)},${avgLon.toFixed(4)}&zoom=13&size=600x300&maptype=mapnik&markers=${markersParam}`;
+
+    let capturedUri: string | null = null;
+
+    // 4. Capture native map snapshot
     try {
       if (mapRef.current) {
         const snapshot = await mapRef.current.takeSnapshot({
-          width: 340,
-          height: 180,
+          width: 600,
+          height: 320,
           format: 'png',
-          quality: 0.8,
-          result: 'base64',
+          quality: 0.9,
+          result: 'file',
         });
         if (snapshot) {
-          setMapSnapshotUri(`data:image/png;base64,${snapshot}`);
+          capturedUri = snapshot.startsWith('file://') || snapshot.startsWith('data:')
+            ? snapshot
+            : `file://${snapshot}`;
         }
       }
     } catch (err) {
-      console.log('Snapshot error:', err);
+      console.log('File snapshot error, trying base64:', err);
+      try {
+        if (mapRef.current) {
+          const b64 = await mapRef.current.takeSnapshot({
+            width: 600,
+            height: 320,
+            format: 'png',
+            quality: 0.9,
+            result: 'base64',
+          });
+          if (b64) {
+            const cleanB64 = b64.replace(/\s/g, '');
+            capturedUri = `data:image/png;base64,${cleanB64}`;
+          }
+        }
+      } catch (b64Err) {
+        console.log('Base64 snapshot error:', b64Err);
+      }
     }
+
+    // Set snapshot URI (or fallback static map if snapshot failed)
+    setMapSnapshotUri(capturedUri || fallbackStaticUri);
 
     setReceiptVisible(true);
     
@@ -314,10 +358,13 @@ export default function MapScreen() {
         return;
       }
 
+      // Wait a short moment for images inside the receipt to be 100% rendered
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
       // Capture receipt View shot as PNG
       const uri = await captureRef(receiptRef, {
         format: 'png',
-        quality: 0.9,
+        quality: 1.0,
         result: 'tmpfile',
       });
 
@@ -528,7 +575,12 @@ export default function MapScreen() {
                 {/* Map Preview Image inside Receipt */}
                 <View style={styles.rMiniMapWrap}>
                   {mapSnapshotUri ? (
-                    <Image source={{ uri: mapSnapshotUri }} style={styles.rMiniMapImage} resizeMode="cover" />
+                    <Image
+                      source={{ uri: mapSnapshotUri }}
+                      style={styles.rMiniMapImage}
+                      resizeMode="cover"
+                      fadeDuration={0}
+                    />
                   ) : (
                     <View style={styles.rMiniMapPlaceholder}>
                       <Feather name="map" size={24} color="#888" />
