@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ImageBackground,
   Dimensions,
   Modal,
   TextInput,
@@ -13,10 +14,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { BlurView } from 'expo-blur';
+import { FrostedGlassCard } from '../components/FrostedGlass';
+import { OutlinedText } from '../components/OutlinedText';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 40) / 7;
@@ -67,35 +71,70 @@ type TravelBook = {
   stamps: StampItem[];
 };
 
-// Preset sample photos
+// Preset sample photos — Bangkok Tourism themed
 const samplePhotos: { [key: number]: string } = {
-  1: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=300&q=80',
-  2: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&q=80',
-  3: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80',
-  4: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=300&q=80',
-  5: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80',
-  6: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80',
-  7: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&q=80',
-  8: 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=300&q=80',
-  9: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&q=80',
-  10: 'https://images.unsplash.com/photo-1583417646698-f2b7f75fb192?w=300&q=80',
-  11: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=300&q=80',
-  12: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=300&q=80',
+  1:  'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=300&q=80', // Wat Phra Kaew / Grand Palace
+  2:  'https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=300&q=80', // Bangkok temples at night
+  3:  'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=300&q=80', // Chao Phraya river
+  4:  'https://images.unsplash.com/photo-1583417646698-f2b7f75fb192?w=300&q=80', // Thai temple golden
+  5:  'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=300&q=80', // Bangkok skyline night
+  6:  'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=300&q=80', // Wat Arun
+  7:  'https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=300&q=80', // Chatuchak weekend market
+  8:  'https://images.unsplash.com/photo-1559628376-f3fe5f782a2a?w=300&q=80', // Bangkok street food Yaowarat
+  9:  'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=300&q=80', // Bangkok Asiatique pier
+  10: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=300&q=80', // Bangkok modern skyline
+  11: 'https://images.unsplash.com/photo-1597335068558-463a8d4e60a4?w=300&q=80', // Jim Thompson House
+  12: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=300&q=80', // Flower market Bangkok
 };
+
+// Bangkok attractions for journal entries
+const bangkokPlaces = [
+  { title: 'วัดพระแก้ว', place: 'วัดพระศรีรัตนศาสดาราม, พระนคร' },
+  { title: 'เยาวราช ยามค่ำ', place: 'เยาวราช, สัมพันธวงศ์' },
+  { title: 'แม่น้ำเจ้าพระยา', place: 'ท่าช้าง, พระนคร' },
+  { title: 'วัดอรุณฯ', place: 'วัดอรุณราชวราราม, บางกอกใหญ่' },
+  { title: 'สยามพารากอน', place: 'สยามสแควร์, ปทุมวัน' },
+  { title: 'จตุจักร วีคเอนด์', place: 'ตลาดจตุจักร, จตุจักร' },
+  { title: 'ICONSIAM ริมน้ำ', place: 'ICONSIAM, คลองสาน' },
+  { title: 'คาเฟ่ย่านอารีย์', place: 'ย่านอารีย์, พญาไท' },
+  { title: 'ตลาดดอกไม้ปากคลอง', place: 'ปากคลองตลาด, พระนคร' },
+  { title: 'วัดโพธิ์', place: 'วัดพระเชตุพนฯ, พระนคร' },
+  { title: 'อาเซียทีค ริมเจ้าพระยา', place: 'Asiatique, ยานนาวา' },
+  { title: 'ถนนข้าวสาร ไนท์มาร์เก็ต', place: 'ถนนข้าวสาร, พระนคร' },
+  { title: 'บ้านจิม ทอมป์สัน', place: 'ปทุมวัน, กรุงเทพฯ' },
+  { title: 'Chatuchak Park', place: 'สวนจตุจักร, จตุจักร' },
+  { title: 'Sky Bar Lebua', place: 'State Tower, บางรัก' },
+  { title: 'วัดสระเกศ (ภูเขาทอง)', place: 'บางกอกน้อย, กรุงเทพฯ' },
+  { title: 'ตลาดออร์กานิก OR', place: 'เพลินจิต, ปทุมวัน' },
+  { title: 'เมืองเก่า บางลำพู', place: 'บางลำพู, พระนคร' },
+  { title: 'ห้างสรรพสินค้าเอ็มควอเทียร์', place: 'สุขุมวิท 35-37, วัฒนา' },
+  { title: 'ลานคนเมือง', place: 'สนามหลวง, พระนคร' },
+  { title: 'บึงบัวท่าน้ำ', place: 'บางนา, กรุงเทพฯ' },
+  { title: 'คลองบางหลวง', place: 'บางกอกใหญ่, กรุงเทพฯ' },
+  { title: 'One Bangkok', place: 'วิทยุ, ปทุมวัน' },
+  { title: 'สยามสแควร์ วัน', place: 'สยาม, ปทุมวัน' },
+  { title: 'วัดมหาธาตุ', place: 'ท้องสนามหลวง, พระนคร' },
+  { title: 'พิพิธภัณฑ์ MOCA', place: 'วิภาวดีรังสิต, จตุจักร' },
+  { title: 'สวนลุมพินี', place: 'ลุมพินี, ปทุมวัน' },
+  { title: 'เซ็นทรัล เวิลด์', place: 'ราชประสงค์, ปทุมวัน' },
+  { title: 'ตลาดน้ำคลองลัดมะยม', place: 'ภาษีเจริญ, กรุงเทพฯ' },
+  { title: 'เอ็มสเฟียร์ & วัฒนา', place: 'สุขุมวิท, วัฒนา' },
+];
 
 // Initial preset entries for April 2026
 const initialEntries: { [dateKey: string]: JournalEntry } = {};
 for (let d = 1; d <= 30; d++) {
   const key = `2026-03-${d.toString().padStart(2, '0')}`;
+  const placeInfo = bangkokPlaces[(d - 1) % bangkokPlaces.length];
   initialEntries[key] = {
     dateKey: key,
     day: d,
     month: 3,
     year: 2026,
     photoUrl: samplePhotos[(d % 12) + 1] || samplePhotos[1],
-    title: `ความทรงจำวันที่ ${d} เมษายน`,
-    places: [`สถานที่ ${d}`],
-    journalNote: `บันทึกความทรงจำการเดินทางสไตล์ Stamp Calendar ประจำวันที่ ${d} เมษายน 2026`,
+    title: placeInfo.title,
+    places: [placeInfo.place],
+    journalNote: `เที่ยว${placeInfo.title} ย่าน${placeInfo.place} — บันทึกความทรงจำกรุงเทพฯ วันที่ ${d} เมษายน 2026`,
   };
 }
 
@@ -164,6 +203,7 @@ const initialBooks: TravelBook[] = [
 ];
 
 export default function AlbumScreen() {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'Calendar' | 'Books'>('Books');
   
   // --- Calendar States ---
@@ -403,8 +443,14 @@ export default function AlbumScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Top Segmented Selector: [ 📮 Stamp Calendar | 📕 Travel Books & Stamps ] */}
+    <ImageBackground
+      source={require('../../assets/images/dalmatian_bg.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.backgroundOverlay} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Top Segmented Selector: [ 📮 Stamp Calendar | 📕 Travel Books & Stamps ] */}
       <View style={styles.topSegmentWrap}>
         <View style={styles.topSegment}>
           <TouchableOpacity
@@ -437,14 +483,25 @@ export default function AlbumScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.monthHeaderLeft}>
-              <Text style={styles.monthNumber}>
-                {(currentMonth + 1).toString().padStart(2, '0')}
-              </Text>
+              <OutlinedText
+                text={(currentMonth + 1).toString().padStart(2, '0')}
+                style={styles.monthNumber}
+                strokeColor="#FFFFFF"
+                strokeWidth={5}
+              />
               <View style={styles.monthNameWrap}>
-                <Text style={styles.yearText}>{currentYear}</Text>
-                <Text style={styles.monthNameText}>
-                  {monthNamesEnglish[currentMonth]}
-                </Text>
+                <OutlinedText
+                  text={String(currentYear)}
+                  style={styles.yearText}
+                  strokeColor="#FFFFFF"
+                  strokeWidth={2.5}
+                />
+                <OutlinedText
+                  text={monthNamesEnglish[currentMonth]}
+                  style={styles.monthNameText}
+                  strokeColor="#FFFFFF"
+                  strokeWidth={3.5}
+                />
               </View>
             </View>
 
@@ -552,8 +609,18 @@ export default function AlbumScreen() {
         <ScrollView contentContainerStyle={styles.booksContainer}>
           <View style={styles.booksHeader}>
             <View>
-              <Text style={styles.booksTitle}>MY TRAVEL PASSPORTS</Text>
-              <Text style={styles.booksSubtitle}>สมุดสะสมแสตมป์การเดินทางส่วนตัว</Text>
+              <OutlinedText
+                text="MY TRAVEL PASSPORTS"
+                style={styles.booksTitle}
+                strokeColor="#FFFFFF"
+                strokeWidth={3.5}
+              />
+              <OutlinedText
+                text="Personal Travel Stamp Collection Books"
+                style={styles.booksSubtitle}
+                strokeColor="#FFFFFF"
+                strokeWidth={2.5}
+              />
             </View>
             <TouchableOpacity
               style={styles.btnCreateBook}
@@ -561,7 +628,7 @@ export default function AlbumScreen() {
               activeOpacity={0.8}
             >
               <Feather name="plus" size={18} color="#fff" />
-              <Text style={styles.btnCreateBookText}>สร้างหนังสือ</Text>
+              <Text style={styles.btnCreateBookText}>Create Book</Text>
             </TouchableOpacity>
           </View>
 
@@ -601,14 +668,14 @@ export default function AlbumScreen() {
       )}
 
       {/* --- MODAL 1: OPENED BOOK & STAMP OVERVIEW GALLERY --- */}
-      <Modal visible={selectedBook !== null} animationType="slide">
+      <Modal visible={selectedBook !== null} animationType="slide" statusBarTranslucent={true}>
         {selectedBook && (
-          <SafeAreaView style={styles.openedBookContainer} edges={['top', 'bottom']}>
+          <View style={styles.openedBookContainer}>
             {/* Book Header Bar */}
-            <View style={styles.openedBookNav}>
+            <View style={[styles.openedBookNav, { paddingTop: Math.max(insets.top + 6, Platform.OS === 'ios' ? 52 : 16) }]}>
               <TouchableOpacity onPress={() => setSelectedBook(null)} style={styles.openedBookBackBtn} activeOpacity={0.7}>
                 <Feather name="arrow-left" size={20} color="#333" />
-                <Text style={styles.openedBookBackText}>ปิดสมุด</Text>
+                <Text style={styles.openedBookBackText}>Close Book</Text>
               </TouchableOpacity>
               <Text style={styles.openedBookNavTitle} numberOfLines={1}>
                 {selectedBook.title}
@@ -619,7 +686,7 @@ export default function AlbumScreen() {
                 activeOpacity={0.8}
               >
                 <Feather name="plus" size={15} color="#fff" />
-                <Text style={styles.btnAddStampText}>เพิ่มแสตมป์</Text>
+                <Text style={styles.btnAddStampText}>Add Stamp</Text>
               </TouchableOpacity>
             </View>
 
@@ -636,24 +703,24 @@ export default function AlbumScreen() {
                 <View style={styles.passportBioDivider} />
                 <View style={styles.passportBioRow}>
                   <Text style={styles.passportBioLbl}>STAMPS COLLECTED:</Text>
-                  <Text style={styles.passportBioVal}>{selectedBook.stamps.length} สถานที่</Text>
+                  <Text style={styles.passportBioVal}>{selectedBook.stamps.length} places</Text>
                 </View>
               </View>
 
               {/* Stamp Collection Overview Gallery Section */}
               <View style={styles.stampGallerySection}>
                 <Text style={styles.stampGalleryHeading}>STAMP COLLECTION OVERVIEW 📮</Text>
-                <Text style={styles.stampGallerySubheading}>ภาพรวมแสตมป์สถานที่ทั้งหมดที่สะสมในเล่มนี้</Text>
+                <Text style={styles.stampGallerySubheading}>Overview of all travel stamps collected in this book</Text>
 
                 {selectedBook.stamps.length === 0 ? (
                   <View style={styles.emptyStampsWrap}>
                     <Feather name="award" size={40} color="#ccc" />
-                    <Text style={styles.emptyStampsText}>ยังไม่มีแสตมป์ในสมุดเล่มนี้</Text>
+                    <Text style={styles.emptyStampsText}>No stamps in this book yet</Text>
                     <TouchableOpacity
                       style={styles.btnAddStampEmpty}
                       onPress={() => setAddStampModalVisible(true)}
                     >
-                      <Text style={styles.btnAddStampEmptyText}>+ เพิ่มแสตมป์แรกของคุณ</Text>
+                      <Text style={styles.btnAddStampEmptyText}>+ Add Your First Stamp</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -688,41 +755,45 @@ export default function AlbumScreen() {
                 )}
               </View>
             </ScrollView>
-          </SafeAreaView>
+          </View>
         )}
       </Modal>
 
       {/* --- MODAL 2: CREATE NEW BOOK (CUSTOM TITLE & COLOR) --- */}
-      <Modal visible={createBookModalVisible} animationType="slide" transparent>
+      <Modal visible={createBookModalVisible} animationType="slide" transparent onRequestClose={() => setCreateBookModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
-          <View style={styles.modalCard}>
+          <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+          <FrostedGlassCard style={styles.modalCard} intensity={95}>
+            <View style={styles.dragHandleWrap}>
+              <View style={styles.dragHandle} />
+            </View>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>สร้างหนังสือเดินทางใหม่ 📕</Text>
-              <TouchableOpacity onPress={() => setCreateBookModalVisible(false)}>
-                <Feather name="x" size={22} color="#333" />
+              <Text style={styles.modalTitle}>Create New Passport Book 📕</Text>
+              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setCreateBookModalVisible(false)}>
+                <Feather name="x" size={20} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
-              <Text style={styles.label}>พิมพ์คำบนปกหนังสือ (Book Title)</Text>
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <Text style={styles.label}>Book Title (Foil Stamped Text)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="เช่น MY TRAVEL PASSPORT 2026, ทริปญี่ปุ่น"
-                placeholderTextColor="#aaa"
+                placeholder="e.g. MY TRAVEL PASSPORT 2026, JAPAN TRIP"
+                placeholderTextColor="#A0A0A0"
                 value={newBookTitle}
                 onChangeText={setNewBookTitle}
               />
 
-              <Text style={styles.label}>คำบรรยายใต้ปก (Subtitle / Passport No.)</Text>
+              <Text style={styles.label}>Subtitle / Passport No.</Text>
               <TextInput
                 style={styles.input}
-                placeholder="เช่น BANGKOK & BEYOND, Virgo Collection"
-                placeholderTextColor="#aaa"
+                placeholder="e.g. BANGKOK & BEYOND, Virgo Collection"
+                placeholderTextColor="#A0A0A0"
                 value={newBookSubtitle}
                 onChangeText={setNewBookSubtitle}
               />
 
-              <Text style={styles.label}>เลือกสีหนังสือ (Book Cover Color)</Text>
+              <Text style={styles.label}>Book Cover Color</Text>
               <View style={styles.colorPalette}>
                 {BOOK_COLORS.map(c => (
                   <TouchableOpacity
@@ -737,7 +808,7 @@ export default function AlbumScreen() {
                 ))}
               </View>
 
-              <Text style={styles.label}>เลือกตราสัญลักษณ์หน้าปก (Cover Emblem)</Text>
+              <Text style={styles.label}>Cover Emblem</Text>
               <View style={styles.emblemRow}>
                 {['compass', 'globe', 'map-pin', 'navigation', 'star'].map(emb => (
                   <TouchableOpacity
@@ -753,48 +824,54 @@ export default function AlbumScreen() {
 
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.btnCancel} onPress={() => setCreateBookModalVisible(false)}>
-                <Text style={styles.btnCancelText}>ยกเลิก</Text>
+                <Text style={styles.btnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnSave} onPress={createNewBook}>
-                <Text style={styles.btnSaveText}>สร้างหนังสือ</Text>
+                <Text style={styles.btnSaveText}>Create Book</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </FrostedGlassCard>
         </KeyboardAvoidingView>
       </Modal>
 
       {/* --- MODAL 3: ADD STAMP TO BOOK --- */}
-      <Modal visible={addStampModalVisible} animationType="slide" transparent>
+      <Modal visible={addStampModalVisible} animationType="slide" transparent onRequestClose={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
-          <View style={styles.modalCard}>
+          <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+          <FrostedGlassCard style={styles.modalCard} intensity={95}>
+            <View style={styles.dragHandleWrap}>
+              <View style={styles.dragHandle} />
+            </View>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>เพิ่มแสตมป์ในหนังสือ 📮</Text>
-              <TouchableOpacity onPress={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
-                <Feather name="x" size={22} color="#333" />
+              <Text style={styles.modalTitle}>Add Stamp to Book 📮</Text>
+              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
+                <Feather name="x" size={20} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               {/* Photo preview + pickers */}
-              <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <View style={styles.modalPhotoSection}>
                 {newStampPhotoUrl ? (
-                  <Image source={{ uri: newStampPhotoUrl }} style={{ width: 110, height: 110, borderRadius: 10, marginBottom: 4 }} />
+                  <View style={styles.largeStamp}>
+                    <Image source={{ uri: newStampPhotoUrl }} style={styles.largeStampImage} />
+                  </View>
                 ) : (
-                  <View style={{ width: 110, height: 110, backgroundColor: '#eee', borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 4 }}>
-                    <Feather name="image" size={32} color="#aaa" />
+                  <View style={styles.largeStampPlaceholder}>
+                    <Feather name="image" size={36} color="#B0B0B0" />
                   </View>
                 )}
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                   <TouchableOpacity style={styles.btnPickPhoto} onPress={pickPhotoForStamp}>
-                    <Feather name="camera" size={13} color="#333" />
-                    <Text style={styles.btnPickPhotoText}>จากโทรศัพท์</Text>
+                    <Feather name="camera" size={15} color="#333" />
+                    <Text style={styles.btnPickPhotoText}>From Phone</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.btnPickPhoto, { backgroundColor: '#E8F4F8' }]}
+                    style={[styles.btnPickPhoto, { backgroundColor: 'rgba(42, 127, 160, 0.12)', borderColor: 'rgba(42, 127, 160, 0.2)' }]}
                     onPress={() => setShowCalendarPicker(prev => !prev)}
                   >
-                    <Feather name="calendar" size={13} color="#2A7FA0" />
-                    <Text style={[styles.btnPickPhotoText, { color: '#2A7FA0' }]}>นำเข้าจากปฏิทิน</Text>
+                    <Feather name="calendar" size={15} color="#2A7FA0" />
+                    <Text style={[styles.btnPickPhotoText, { color: '#2A7FA0' }]}>Import Calendar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -804,9 +881,9 @@ export default function AlbumScreen() {
                 const calEntries = Object.values(entries).filter(e => e.photoUrl);
                 return (
                   <View style={styles.calPickerWrap}>
-                    <Text style={styles.calPickerTitle}>📸 เลือกจากบันทึกปฏิทิน</Text>
+                    <Text style={styles.calPickerTitle}>📸 Select from Calendar Entries</Text>
                     {calEntries.length === 0 ? (
-                      <Text style={{ fontSize: 12, color: '#999', textAlign: 'center', padding: 12 }}>ยังไม่มีบันทึกในปฏิทิน</Text>
+                      <Text style={{ fontSize: 12, color: '#888', textAlign: 'center', padding: 12 }}>No calendar entries found</Text>
                     ) : (
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
                         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 4 }}>
@@ -831,45 +908,49 @@ export default function AlbumScreen() {
                 );
               })()}
 
-              <Text style={styles.label}>ชื่อสถานที่ / แสตมป์</Text>
-              <TextInput style={styles.input} placeholder="เช่น วัดพระแก้ว, สยามพารากอน" value={newStampTitle} onChangeText={setNewStampTitle} />
+              <Text style={styles.label}>Place Name / Stamp Title</Text>
+              <TextInput style={styles.input} placeholder="e.g. Wat Phra Kaew, Siam Paragon" placeholderTextColor="#A0A0A0" value={newStampTitle} onChangeText={setNewStampTitle} />
 
-              <Text style={styles.label}>เมือง / ประเทศ</Text>
-              <TextInput style={styles.input} placeholder="เช่น Bangkok, Thailand" value={newStampLocation} onChangeText={setNewStampLocation} />
+              <Text style={styles.label}>City / Country</Text>
+              <TextInput style={styles.input} placeholder="e.g. Bangkok, Thailand" placeholderTextColor="#A0A0A0" value={newStampLocation} onChangeText={setNewStampLocation} />
 
               {newStampDate ? (
                 <View style={styles.importedDateBadge}>
                   <Feather name="calendar" size={12} color="#2A7FA0" />
-                  <Text style={styles.importedDateText}>วันที่จากปฏิทิน: {newStampDate}</Text>
+                  <Text style={styles.importedDateText}>Date from calendar: {newStampDate}</Text>
                   <TouchableOpacity onPress={() => setNewStampDate('')}>
                     <Feather name="x" size={12} color="#999" />
                   </TouchableOpacity>
                 </View>
               ) : null}
 
-              <Text style={styles.label}>บันทึกบรรยายสั้นๆ ✍️</Text>
-              <TextInput style={[styles.input, styles.textArea]} placeholder="เล่าความประทับใจสั้นๆ..." multiline numberOfLines={3} value={newStampNote} onChangeText={setNewStampNote} />
+              <Text style={styles.label}>Short Journal Note ✍️</Text>
+              <TextInput style={[styles.input, styles.textArea]} placeholder="Write a short memory note..." placeholderTextColor="#A0A0A0" multiline numberOfLines={3} value={newStampNote} onChangeText={setNewStampNote} />
             </ScrollView>
 
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.btnCancel} onPress={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
-                <Text style={styles.btnCancelText}>ยกเลิก</Text>
+                <Text style={styles.btnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnSave} onPress={addStampToBook}>
-                <Text style={styles.btnSaveText}>บันทึกแสตมป์</Text>
+                <Text style={styles.btnSaveText}>Save Stamp</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </FrostedGlassCard>
         </KeyboardAvoidingView>
       </Modal>
 
       {/* --- MODAL 4: FULL STAMP PREVIEW --- */}
-      <Modal visible={selectedStamp !== null} transparent animationType="fade">
+      <Modal visible={selectedStamp !== null} transparent animationType="fade" onRequestClose={() => setSelectedStamp(null)}>
         {selectedStamp && (
           <View style={styles.stampDetailModalBg}>
-            <View style={styles.stampDetailCard}>
-              <TouchableOpacity style={styles.stampDetailCloseBtn} onPress={() => setSelectedStamp(null)}>
-                <Feather name="x" size={20} color="#fff" />
+            <BlurView intensity={45} tint="dark" style={StyleSheet.absoluteFill} />
+            <FrostedGlassCard style={styles.stampDetailCard} intensity={95}>
+              <View style={styles.dragHandleWrap}>
+                <View style={styles.dragHandle} />
+              </View>
+              <TouchableOpacity style={styles.modalCloseBtnAbs} onPress={() => setSelectedStamp(null)}>
+                <Feather name="x" size={18} color="#333" />
               </TouchableOpacity>
 
               <View style={styles.stampDetailFrame}>
@@ -879,23 +960,27 @@ export default function AlbumScreen() {
               <Text style={styles.stampDetailTitle}>{selectedStamp.title}</Text>
               <Text style={styles.stampDetailLoc}>📍 {selectedStamp.location} • {selectedStamp.date}</Text>
               <Text style={styles.stampDetailNote}>"{selectedStamp.note}"</Text>
-            </View>
+            </FrostedGlassCard>
           </View>
         )}
       </Modal>
 
       {/* --- MODAL 5: CALENDAR DAY EDIT MODAL --- */}
-      <Modal visible={dayModalVisible} animationType="slide" transparent>
+      <Modal visible={dayModalVisible} animationType="slide" transparent onRequestClose={() => setDayModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
-          <View style={styles.modalCard}>
+          <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+          <FrostedGlassCard style={styles.modalCard} intensity={95}>
+            <View style={styles.dragHandleWrap}>
+              <View style={styles.dragHandle} />
+            </View>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>บันทึกความทรงจำแสตมป์ 📮</Text>
-              <TouchableOpacity onPress={() => setDayModalVisible(false)}>
-                <Feather name="x" size={22} color={Colors.freshlyRoasted} />
+              <Text style={styles.modalTitle}>Stamp Memory Entry 📮</Text>
+              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setDayModalVisible(false)}>
+                <Feather name="x" size={20} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
               <View style={styles.modalPhotoSection}>
                 {editPhotoUrl ? (
                   <View style={styles.largeStamp}>
@@ -903,42 +988,65 @@ export default function AlbumScreen() {
                   </View>
                 ) : (
                   <View style={styles.largeStampPlaceholder}>
-                    <Feather name="image" size={32} color="#aaa" />
+                    <Feather name="image" size={36} color="#B0B0B0" />
                   </View>
                 )}
                 <TouchableOpacity style={styles.btnPickPhoto} onPress={pickPhotoForCalendar}>
-                  <Feather name="camera" size={16} color={Colors.freshlyRoasted} />
-                  <Text style={styles.btnPickPhotoText}>เลือกรูปจากโทรศัพท์</Text>
+                  <Feather name="camera" size={16} color="#333" />
+                  <Text style={styles.btnPickPhotoText}>Select Photo from Phone</Text>
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.label}>ชื่อบันทึกความทรงจำ</Text>
-              <TextInput style={styles.input} value={editTitle} onChangeText={setEditTitle} placeholder="ระบุหัวข้อ..." />
+              <Text style={styles.label}>Memory Title</Text>
+              <TextInput
+                style={styles.input}
+                value={editTitle}
+                onChangeText={setEditTitle}
+                placeholder="Enter title..."
+                placeholderTextColor="#A0A0A0"
+              />
 
-              <Text style={styles.label}>สถานที่ไป</Text>
-              <TextInput style={styles.input} value={editPlaces} onChangeText={setEditPlaces} placeholder="คั่นด้วยเครื่องหมายจุลภาค ," />
+              <Text style={styles.label}>Places Visited</Text>
+              <TextInput
+                style={styles.input}
+                value={editPlaces}
+                onChangeText={setEditPlaces}
+                placeholder="Separated by comma ,"
+                placeholderTextColor="#A0A0A0"
+              />
 
-              <Text style={styles.label}>บรรยายความทรงจำสั้นๆ (Journal Note) ✍️</Text>
-              <TextInput style={[styles.input, styles.textArea]} value={editNote} onChangeText={setEditNote} placeholder="เขียนบรรยายบรรยากาศสั้นๆ..." multiline numberOfLines={3} />
+              <Text style={styles.label}>Journal Note ✍️</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder="Write a brief journal description..."
+                placeholderTextColor="#A0A0A0"
+                multiline
+                numberOfLines={3}
+              />
             </ScrollView>
 
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.btnDelete} onPress={deleteCalendarEntry}>
-                <Text style={styles.btnDeleteText}>ลบ</Text>
+                <Text style={styles.btnDeleteText}>Delete</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnSave} onPress={saveCalendarEntry}>
-                <Text style={styles.btnSaveText}>บันทึก</Text>
+                <Text style={styles.btnSaveText}>Save</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </FrostedGlassCard>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAF8F5' },
+  backgroundImage: { flex: 1, width: '100%', height: '100%' },
+  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(250, 246, 240, 0.45)' },
+  container: { flex: 1 },
 
   // Top Segment Bar
   topSegmentWrap: { alignItems: 'center', marginVertical: 8, paddingHorizontal: 20 },
@@ -1011,7 +1119,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 6 : 10,
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#EFECE6',
@@ -1062,45 +1169,50 @@ const styles = StyleSheet.create({
   emblemOptionSelected: { borderColor: Colors.freshlyRoasted, backgroundColor: Colors.butter },
 
   // Stamp Detail Preview Modal
-  stampDetailModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  stampDetailCard: { width: '100%', backgroundColor: '#FAF8F5', borderRadius: 20, padding: 20, alignItems: 'center', position: 'relative' },
-  stampDetailCloseBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
-  stampDetailFrame: { width: '100%', height: 220, borderRadius: 12, overflow: 'hidden', marginBottom: 14 },
+  stampDetailModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  stampDetailCard: { width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.92)', borderRadius: 28, padding: 24, alignItems: 'center', position: 'relative' },
+  modalCloseBtnAbs: { position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(0,0,0,0.06)', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  stampDetailFrame: { width: '100%', height: 220, borderRadius: 16, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)' },
   stampDetailPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
-  stampDetailTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 24, color: '#222', textAlign: 'center' },
-  stampDetailLoc: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#777', marginTop: 4 },
-  stampDetailNote: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 16, color: '#444', marginTop: 12, textAlign: 'center', lineHeight: 22 },
+  stampDetailTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 24, color: '#111', textAlign: 'center' },
+  stampDetailLoc: { fontFamily: 'Inter_500Medium', fontSize: 13, color: '#666', marginTop: 4 },
+  stampDetailNote: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 16, color: '#333', marginTop: 12, textAlign: 'center', lineHeight: 22 },
+
+  // Drag Handle Bar (Aesop Sheet indicator style)
+  dragHandleWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 10 },
+  dragHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(0, 0, 0, 0.18)' },
 
   // Modals General
-  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#FAF8F5', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, maxHeight: '90%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 12 },
-  modalTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 20, color: '#222' },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, width: '100%', maxHeight: '90%', padding: 24, paddingTop: 12, backgroundColor: 'rgba(255, 255, 255, 0.88)' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)', paddingBottom: 14 },
+  modalTitle: { fontFamily: 'Inter_700Bold', fontSize: 19, color: '#111' },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center' },
   modalBody: { marginVertical: 12 },
-  modalPhotoSection: { alignItems: 'center', marginVertical: 10 },
-  largeStamp: { width: 120, height: 120, backgroundColor: '#fff', padding: 6, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
-  largeStampImage: { width: '100%', height: '100%', borderRadius: 4 },
-  largeStampPlaceholder: { width: 120, height: 120, backgroundColor: '#eee', borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  btnPickPhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: '#EFECE6', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  btnPickPhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#333' },
-  label: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#444', marginTop: 12, marginBottom: 4 },
-  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontFamily: 'Inter_400Regular', fontSize: 13, color: '#222' },
-  textArea: { height: 70, textAlignVertical: 'top' },
+  modalPhotoSection: { alignItems: 'center', marginVertical: 12 },
+  largeStamp: { width: 140, height: 140, backgroundColor: '#fff', padding: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
+  largeStampImage: { width: '100%', height: '100%', borderRadius: 14 },
+  largeStampPlaceholder: { width: 140, height: 140, backgroundColor: 'rgba(240, 237, 232, 0.8)', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
+  btnPickPhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, backgroundColor: 'rgba(240, 237, 232, 0.9)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
+  btnPickPhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#222' },
+  label: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#333', marginTop: 14, marginBottom: 6 },
+  input: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#111', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 },
+  textArea: { height: 80, textAlignVertical: 'top' },
 
   // Calendar-to-Stamp import picker
-  calPickerWrap: { backgroundColor: '#F0F8FC', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#C8E6F0' },
+  calPickerWrap: { backgroundColor: 'rgba(240, 248, 252, 0.85)', borderRadius: 16, padding: 14, marginVertical: 12, borderWidth: 1, borderColor: 'rgba(200, 230, 240, 0.8)' },
   calPickerTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#2A7FA0' },
   calPickerItem: { width: 80, alignItems: 'center' },
-  calPickerImg: { width: 72, height: 72, borderRadius: 8, backgroundColor: '#ddd', borderWidth: 2, borderColor: '#fff' },
+  calPickerImg: { width: 72, height: 72, borderRadius: 12, backgroundColor: '#ddd', borderWidth: 2, borderColor: '#fff' },
   calPickerDate: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#2A7FA0', marginTop: 4 },
   calPickerName: { fontFamily: 'Inter_400Regular', fontSize: 10, color: '#444', textAlign: 'center' },
-  importedDateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E8F4F8', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginTop: 8, alignSelf: 'flex-start' },
-  importedDateText: { fontFamily: 'Inter_500Medium', fontSize: 11, color: '#2A7FA0', flex: 1 },
-  modalFooter: { flexDirection: 'row', gap: 12, paddingTop: 10 },
-  btnCancel: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
-  btnCancelText: { fontFamily: 'Inter_600SemiBold', color: '#555', fontSize: 14 },
-  btnDelete: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#FF3B30', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
-  btnDeleteText: { fontFamily: 'Inter_600SemiBold', color: '#FF3B30', fontSize: 14 },
-  btnSave: { flex: 1, backgroundColor: '#222', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
-  btnSaveText: { fontFamily: 'Inter_600SemiBold', color: '#fff', fontSize: 14 },
+  importedDateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(232, 244, 248, 0.9)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: 'flex-start' },
+  importedDateText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#2A7FA0', flex: 1 },
+  modalFooter: { flexDirection: 'row', gap: 12, paddingTop: 16, marginTop: 4 },
+  btnCancel: { flex: 1, backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#FF4D4F', paddingVertical: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  btnCancelText: { fontFamily: 'Inter_600SemiBold', color: '#FF4D4F', fontSize: 15 },
+  btnDelete: { flex: 1, backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#FF4D4F', paddingVertical: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  btnDeleteText: { fontFamily: 'Inter_600SemiBold', color: '#FF4D4F', fontSize: 15 },
+  btnSave: { flex: 1, backgroundColor: '#1E1E1E', paddingVertical: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
+  btnSaveText: { fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 },
 });

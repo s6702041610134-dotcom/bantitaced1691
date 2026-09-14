@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import {
   StyleSheet,
   Text,
@@ -10,18 +11,28 @@ import {
   Alert,
   Keyboard,
   Platform,
+  Modal,
+  Dimensions,
 } from 'react-native';
+
+const { width } = Dimensions.get('window');
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 
+import * as Location from 'expo-location';
+import { captureRef } from 'react-native-view-shot';
+
 // Sub-services and components
 import { OYSTER_BAY_MAP_STYLE } from '../constants/MapStyle';
 import { fetchOSRMRoute, Coordinate } from '../services/routing';
 import { searchPlaces, reverseGeocode, SearchResult } from '../services/geocoding';
 import ReceiptModal from '../components/ReceiptModal';
+import { BlurView } from 'expo-blur';
+import { FrostedGlassCard } from '../components/FrostedGlass';
+import { fetchRealWeather, RealWeatherData } from '../services/weather';
 
 type PlaceItem = {
   id: string;
@@ -41,6 +52,9 @@ const POPULAR_PRESETS = [
 ];
 
 export default function MapScreen() {
+  // Read incoming params from Explore screen "ดูบนแผนที่"
+  const params = useLocalSearchParams<{ lat?: string; lng?: string; placeName?: string }>();
+
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -58,7 +72,154 @@ export default function MapScreen() {
   const [receiptNumber, setReceiptNumber] = useState('');
   const [journeyDate, setJourneyDate] = useState<Date>(new Date());
 
+  // Real Weather Forecasting States
+  const [weatherData, setWeatherData] = useState<RealWeatherData | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  const [showWeatherModal, setShowWeatherModal] = useState(false);
+  const [weatherLocationName, setWeatherLocationName] = useState('กรุงเทพมหานคร');
+
+  // Compass & User Location States
+  const [heading, setHeading] = useState<number>(0);
+  const [showCompassModal, setShowCompassModal] = useState<boolean>(false);
+  const [isLocatingUser, setIsLocatingUser] = useState<boolean>(false);
+
+  // Watch live compass heading
+  useEffect(() => {
+    let subscription: Location.LocationSubscription | null = null;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          subscription = await Location.watchHeadingAsync((data) => {
+            const h = Math.round(data.trueHeading >= 0 ? data.trueHeading : data.magHeading);
+            setHeading(h);
+          });
+        }
+      } catch (err) {
+        console.log('Heading watch error:', err);
+      }
+    })();
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  const getCardinalDirection = (deg: number): string => {
+    const normalized = (deg % 360 + 360) % 360;
+    if (normalized >= 337.5 || normalized < 22.5) return 'N (ทิศเหนือ)';
+    if (normalized >= 22.5 && normalized < 67.5) return 'NE (ตะวันออกเฉียงเหนือ)';
+    if (normalized >= 67.5 && normalized < 112.5) return 'E (ทิศตะวันออก)';
+    if (normalized >= 112.5 && normalized < 157.5) return 'SE (ตะวันออกเฉียงใต้)';
+    if (normalized >= 157.5 && normalized < 202.5) return 'S (ทิศใต้)';
+    if (normalized >= 202.5 && normalized < 247.5) return 'SW (ตะวันตกเฉียงใต้)';
+    if (normalized >= 247.5 && normalized < 292.5) return 'W (ทิศตะวันตก)';
+    return 'NW (ตะวันตกเฉียงเหนือ)';
+  };
+
+  const resetMapToNorth = () => {
+    mapRef.current?.animateCamera({ heading: 0, pitch: 0 }, { duration: 800 });
+  };
+
+  const goToUserLocation = async () => {
+    try {
+      setIsLocatingUser(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('ขอสิทธิ์ตำแหน่ง GPS', 'โปรดอนุญาตสิทธิ์เข้าถึง GPS เพื่อระบุตำแหน่งปัจจุบันของคุณ');
+        setIsLocatingUser(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      mapRef.current?.animateToRegion(
+        {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
+        },
+        1000
+      );
+    } catch (err) {
+      console.log('Location error:', err);
+      Alert.alert('ระบุตำแหน่ง', 'ไม่สามารถดึงตำแหน่งปัจจุบันได้ในขณะนี้');
+    } finally {
+      setIsLocatingUser(false);
+    }
+  };
+
   const mapRef = useRef<MapView | null>(null);
+  const mapContainerRef = useRef<View | null>(null);
+
+  // --- Live Weather Fetcher ---
+  const loadWeather = useCallback(async (lat: number, lon: number, locName?: string) => {
+    setIsLoadingWeather(true);
+    try {
+      const data = await fetchRealWeather(lat, lon);
+      setWeatherData(data);
+      if (locName) setWeatherLocationName(locName);
+    } catch (err) {
+      console.log('Error fetching weather:', err);
+    } finally {
+      setIsLoadingWeather(false);
+    }
+  }, []);
+
+  // Default initial weather load (Bangkok)
+  useEffect(() => {
+    loadWeather(13.7563, 100.5018, 'กรุงเทพมหานคร');
+  }, [loadWeather]);
+
+  // Update live weather when places change (fetch for latest pinned place)
+  useEffect(() => {
+    if (places.length > 0) {
+      const lastPlace = places[places.length - 1];
+      loadWeather(lastPlace.coordinate.latitude, lastPlace.coordinate.longitude, lastPlace.name);
+    }
+  }, [places, loadWeather]);
+
+  // --- 0. Auto-pin place passed from Explore (via URL params) ---
+  useEffect(() => {
+    const lat = params.lat ? parseFloat(params.lat) : null;
+    const lng = params.lng ? parseFloat(params.lng) : null;
+    const name = params.placeName ?? '📍 สถานที่จาก Explore';
+
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+    // Deduplicate: don't add if already pinned at same coords
+    setPlaces((prev) => {
+      const alreadyExists = prev.some(
+        (p) =>
+          Math.abs(p.coordinate.latitude - lat) < 0.0001 &&
+          Math.abs(p.coordinate.longitude - lng) < 0.0001
+      );
+      if (alreadyExists) return prev;
+      return [
+        ...prev,
+        {
+          id: `explore-${lat}-${lng}`,
+          name,
+          coordinate: { latitude: lat, longitude: lng },
+        },
+      ];
+    });
+
+    // Animate map to the pinned place
+    const timer = setTimeout(() => {
+      mapRef.current?.animateToRegion(
+        {
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+    }, 600);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.lat, params.lng, params.placeName]);
 
   // --- 1. Debounced Route API Computation with AbortController ---
   useEffect(() => {
@@ -234,13 +395,31 @@ export default function MapScreen() {
     }
 
     // 3. Short pause for map view tiles to render fitted bounds
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
-    // 4. Capture native map snapshot
     let snapshotUri: string | null = null;
 
+    // 4a. Capture rendered map screen via ViewShot (100% reliable on Apple Maps & Google Maps)
     try {
-      if (mapRef.current) {
+      if (mapContainerRef.current) {
+        const viewShotUri = await captureRef(mapContainerRef, {
+          format: 'png',
+          quality: 0.9,
+          result: 'tmpfile',
+        });
+        if (viewShotUri) {
+          snapshotUri = viewShotUri.startsWith('file://') || viewShotUri.startsWith('data:')
+            ? viewShotUri
+            : `file://${viewShotUri}`;
+        }
+      }
+    } catch (viewErr) {
+      console.log('captureRef error, trying native takeSnapshot:', viewErr);
+    }
+
+    // 4b. Native takeSnapshot fallback
+    if (!snapshotUri && mapRef.current) {
+      try {
         const snapshot = await mapRef.current.takeSnapshot({
           width: 600,
           height: 320,
@@ -253,28 +432,12 @@ export default function MapScreen() {
             ? snapshot
             : `file://${snapshot}`;
         }
-      }
-    } catch (err) {
-      console.log('File snapshot error, trying base64:', err);
-      try {
-        if (mapRef.current) {
-          const b64 = await mapRef.current.takeSnapshot({
-            width: 600,
-            height: 320,
-            format: 'png',
-            quality: 0.9,
-            result: 'base64',
-          });
-          if (b64) {
-            snapshotUri = `data:image/png;base64,${b64.replace(/\s/g, '')}`;
-          }
-        }
-      } catch (b64Err) {
-        console.log('Base64 snapshot error:', b64Err);
+      } catch (err) {
+        console.log('File snapshot error:', err);
       }
     }
 
-    // Fallback static map if native snapshot was unavailable
+    // 4c. OpenStreetMap Static Map fallback if all else failed
     if (!snapshotUri && places.length > 0) {
       const avgLat = places.reduce((sum, p) => sum + p.coordinate.latitude, 0) / places.length;
       const avgLon = places.reduce((sum, p) => sum + p.coordinate.longitude, 0) / places.length;
@@ -293,40 +456,42 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Interactive Map View (Apple Maps on iOS, Google Maps on Android) */}
-      <MapView
-        ref={mapRef}
-        provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
-        style={StyleSheet.absoluteFill}
-        onPress={handleMapPress}
-        customMapStyle={OYSTER_BAY_MAP_STYLE}
-        initialRegion={{
-          latitude: 13.7563,
-          longitude: 100.5018,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      >
-        {places.map((p, i) => (
-          <Marker key={p.id} coordinate={p.coordinate}>
-            <View style={styles.markerContainer}>
-              <View style={styles.markerPin} />
-              <View style={styles.markerLabel}>
-                <Text style={styles.markerText}>{(i + 1).toString().padStart(2, '0')}</Text>
+      {/* Interactive Map View Container (Captured via ViewShot for 100% reliable receipt snapshots) */}
+      <View ref={mapContainerRef} collapsable={false} style={StyleSheet.absoluteFill}>
+        <MapView
+          ref={mapRef}
+          provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
+          style={StyleSheet.absoluteFill}
+          onPress={handleMapPress}
+          customMapStyle={Platform.OS === 'android' ? OYSTER_BAY_MAP_STYLE : undefined}
+          initialRegion={{
+            latitude: 13.7563,
+            longitude: 100.5018,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          {places.map((p, i) => (
+            <Marker key={p.id} coordinate={p.coordinate}>
+              <View style={styles.markerContainer}>
+                <View style={styles.markerPin} />
+                <View style={styles.markerLabel}>
+                  <Text style={styles.markerText}>{(i + 1).toString().padStart(2, '0')}</Text>
+                </View>
               </View>
-            </View>
-          </Marker>
-        ))}
+            </Marker>
+          ))}
 
-        {/* Real Road Navigation Polyline */}
-        {routeCoordinates.length > 1 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor={Colors.freshlyRoasted}
-            strokeWidth={4}
-          />
-        )}
-      </MapView>
+          {/* Real Road Navigation Polyline */}
+          {routeCoordinates.length > 1 && (
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeColor={Colors.freshlyRoasted}
+              strokeWidth={4}
+            />
+          )}
+        </MapView>
+      </View>
 
       {/* Top Search Bar & Preset Chips */}
       <SafeAreaView style={styles.overlayTop} pointerEvents="box-none">
@@ -353,13 +518,32 @@ export default function MapScreen() {
             ) : null}
           </View>
 
-          {/* Quick Preset Location Chips */}
+          {/* Quick Preset Location Chips & Live Weather Button */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.presetScroll}
             contentContainerStyle={styles.presetContainer}
           >
+            {/* Live Weather Chip */}
+            <TouchableOpacity
+              style={styles.weatherChip}
+              onPress={() => setShowWeatherModal(true)}
+              activeOpacity={0.8}
+            >
+              {isLoadingWeather ? (
+                <ActivityIndicator size="small" color={Colors.freshlyRoasted} />
+              ) : weatherData ? (
+                <View style={styles.weatherChipContent}>
+                  <Text style={styles.weatherEmoji}>{weatherData.emoji}</Text>
+                  <Text style={styles.weatherTempText}>{weatherData.temperature}°C</Text>
+                  <Text style={styles.weatherCondChipText} numberOfLines={1}>{weatherData.conditionText}</Text>
+                </View>
+              ) : (
+                <Text style={styles.weatherCondChipText}>🌤️ สภาพอากาศสด</Text>
+              )}
+            </TouchableOpacity>
+
             {POPULAR_PRESETS.map((preset, idx) => (
               <TouchableOpacity
                 key={idx}
@@ -467,6 +651,219 @@ export default function MapScreen() {
         journeyDate={journeyDate}
         onClose={closeReceipt}
       />
+
+      {/* Real Weather Forecast Modal */}
+      <Modal
+        visible={showWeatherModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowWeatherModal(false)}
+      >
+        <View style={styles.weatherModalOverlay}>
+          <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+          <FrostedGlassCard style={styles.weatherModalCard} intensity={95}>
+            <View style={styles.dragHandleWrap}>
+              <View style={styles.dragHandle} />
+            </View>
+
+            <View style={styles.modalHeader}>
+              <Text style={styles.weatherModalTitle}>พยากรณ์อากาศสด 🌤️</Text>
+              <TouchableOpacity style={styles.modalHeaderCloseBtn} onPress={() => setShowWeatherModal(false)}>
+                <Feather name="x" size={20} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.weatherModalSubTitle} numberOfLines={1}>
+              📍 {weatherLocationName}
+            </Text>
+
+            {weatherData && (
+              <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 10 }}>
+                {/* Hero Weather Card */}
+                <View style={styles.weatherHeroBox}>
+                  <Text style={styles.weatherHeroEmoji}>{weatherData.emoji}</Text>
+                  <Text style={styles.weatherHeroTemp}>{weatherData.temperature}°C</Text>
+                  <Text style={styles.weatherHeroCond}>{weatherData.conditionText}</Text>
+
+                  <View style={styles.weatherMetricRow}>
+                    <View style={styles.weatherMetricItem}>
+                      <Feather name="droplet" size={16} color="#2A7FA0" />
+                      <Text style={styles.weatherMetricVal}>{weatherData.humidity}%</Text>
+                      <Text style={styles.weatherMetricLbl}>ความชื้น</Text>
+                    </View>
+                    <View style={styles.weatherMetricDivider} />
+                    <View style={styles.weatherMetricItem}>
+                      <Feather name="wind" size={16} color="#2A7FA0" />
+                      <Text style={styles.weatherMetricVal}>{weatherData.windSpeed} km/h</Text>
+                      <Text style={styles.weatherMetricLbl}>ความเร็วลม</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* 1. Time Period Summaries (เช้า, บ่าย, เย็น, ดึก) */}
+                {weatherData.periods && weatherData.periods.length > 0 && (
+                  <>
+                    <Text style={styles.forecastSectionTitle}>🌅 พยากรณ์อากาศตามช่วงเวลาของวัน</Text>
+                    <View style={styles.periodGrid}>
+                      {weatherData.periods.map((p, idx) => (
+                        <View key={idx} style={styles.periodCard}>
+                          <View style={styles.periodHeader}>
+                            <Text style={styles.periodEmoji}>{p.emoji}</Text>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.periodName}>{p.periodName}</Text>
+                              <Text style={styles.periodTime}>{p.timeRange}</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.periodTemp}>{p.temp}°C</Text>
+                          <Text style={styles.periodCond} numberOfLines={1}>{p.conditionText}</Text>
+                          {p.pop > 0 ? (
+                            <View style={styles.periodPopBadge}>
+                              <Feather name="umbrella" size={9} color="#2A7FA0" />
+                              <Text style={styles.periodPopText}>ฝน {p.pop}%</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* 2. 24-Hour Hourly Forecast Horizontal Scroll */}
+                {weatherData.hourly && weatherData.hourly.length > 0 && (
+                  <>
+                    <Text style={styles.forecastSectionTitle}>⏰ พยากรณ์อากาศรายชั่วโมง (24 ชั่วโมง)</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+                      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 2 }}>
+                        {weatherData.hourly.map((h, idx) => (
+                          <View key={idx} style={[styles.hourlyItemCard, idx === 0 && styles.hourlyItemActive]}>
+                            <Text style={[styles.hourlyTimeText, idx === 0 && styles.hourlyTimeActive]}>{h.timeStr}</Text>
+                            <Text style={styles.hourlyEmoji}>{h.emoji}</Text>
+                            <Text style={styles.hourlyTemp}>{h.temp}°C</Text>
+                            {h.pop > 0 ? (
+                              <Text style={styles.hourlyPop}>☔ {h.pop}%</Text>
+                            ) : (
+                              <Text style={styles.hourlyPopEmpty}>-</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </>
+                )}
+
+                {/* 3. 7-Day Forecast Section */}
+                <Text style={styles.forecastSectionTitle}>📅 พยากรณ์อากาศล่วงหน้า 7 วัน</Text>
+                <View style={styles.forecastList}>
+                  {weatherData.daily.map((item, idx) => (
+                    <View key={idx} style={styles.forecastRow}>
+                      <Text style={styles.forecastDayName}>{item.dayName}</Text>
+                      <View style={styles.forecastCondWrap}>
+                        <Text style={styles.forecastEmoji}>{item.emoji}</Text>
+                        <Text style={styles.forecastCondText}>{item.conditionText}</Text>
+                      </View>
+                      {item.pop > 0 && (
+                        <View style={styles.forecastPopBadge}>
+                          <Feather name="umbrella" size={10} color="#2A7FA0" />
+                          <Text style={styles.forecastPopText}>{item.pop}%</Text>
+                        </View>
+                      )}
+                      <Text style={styles.forecastTempRange}>
+                        {item.minTemp}° / <Text style={{ fontWeight: '700', color: '#111' }}>{item.maxTemp}°C</Text>
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </FrostedGlassCard>
+        </View>
+      </Modal>
+
+      {/* Floating Map Controls (Compass & Current GPS Location) */}
+      <View style={styles.floatingControlsCol} pointerEvents="box-none">
+        {/* Floating Compass Button */}
+        <TouchableOpacity
+          style={styles.floatingControlBtn}
+          onPress={() => {
+            resetMapToNorth();
+            setShowCompassModal(true);
+          }}
+          activeOpacity={0.85}
+        >
+          <View style={{ transform: [{ rotate: `-${heading}deg` }] }}>
+            <Feather name="compass" size={20} color={Colors.freshlyRoasted} />
+          </View>
+          <Text style={styles.floatingControlText}>{heading}°</Text>
+        </TouchableOpacity>
+
+        {/* Floating GPS Current Location Button */}
+        <TouchableOpacity
+          style={styles.floatingControlBtn}
+          onPress={goToUserLocation}
+          activeOpacity={0.85}
+        >
+          {isLocatingUser ? (
+            <ActivityIndicator size="small" color={Colors.freshlyRoasted} />
+          ) : (
+            <Feather name="navigation" size={20} color={Colors.freshlyRoasted} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Real Digital Compass Modal */}
+      <Modal
+        visible={showCompassModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCompassModal(false)}
+      >
+        <View style={styles.weatherModalOverlay}>
+          <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+          <FrostedGlassCard style={styles.compassModalCard} intensity={95}>
+            <View style={styles.dragHandleWrap}>
+              <View style={styles.dragHandle} />
+            </View>
+
+            <View style={styles.modalHeader}>
+              <Text style={styles.weatherModalTitle}>เข็มทิศนำทางดิจิทัล 🧭</Text>
+              <TouchableOpacity style={styles.modalHeaderCloseBtn} onPress={() => setShowCompassModal(false)}>
+                <Feather name="x" size={20} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.compassBody}>
+              <Text style={styles.compassHeadingNum}>{heading}°</Text>
+              <Text style={styles.compassHeadingDir}>{getCardinalDirection(heading)}</Text>
+
+              {/* Rotating Compass Rose Dial */}
+              <View style={styles.compassRoseWrap}>
+                <View style={[styles.compassRoseDial, { transform: [{ rotate: `-${heading}deg` }] }]}>
+                  <Text style={styles.compassNorthN}>N</Text>
+                  <Text style={styles.compassEastE}>E</Text>
+                  <Text style={styles.compassSouthS}>S</Text>
+                  <Text style={styles.compassWestW}>W</Text>
+
+                  {/* Compass Needles */}
+                  <View style={styles.compassNeedleRed} />
+                  <View style={styles.compassNeedleDark} />
+                  <View style={styles.compassCenterPin} />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.btnResetNorth}
+                onPress={() => {
+                  resetMapToNorth();
+                  setShowCompassModal(false);
+                }}
+              >
+                <Feather name="navigation" size={16} color="#FFFFFF" />
+                <Text style={styles.btnResetNorthText}>หมุนแผนที่ไปทางทิศเหนือ (Reset North)</Text>
+              </TouchableOpacity>
+            </View>
+          </FrostedGlassCard>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -478,15 +875,17 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.oldLace,
+    backgroundColor: 'rgba(250, 246, 240, 0.82)',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
     shadowColor: Colors.freshlyRoasted,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
   searchInput: {
     flex: 1,
@@ -501,12 +900,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.butter,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(255, 248, 220, 0.85)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   presetChipText: {
     fontFamily: 'Inter_500Medium',
@@ -514,16 +918,18 @@ const styles = StyleSheet.create({
     color: Colors.freshlyRoasted,
   },
   dropdown: {
-    backgroundColor: Colors.oldLace,
-    borderRadius: 16,
+    backgroundColor: 'rgba(250, 246, 240, 0.92)',
+    borderRadius: 20,
     marginTop: 8,
     paddingVertical: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
-    maxHeight: 220,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
+    maxHeight: 240,
   },
   dropdownItem: {
     flexDirection: 'row',
@@ -624,4 +1030,186 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnText: { color: Colors.oldLace, fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+
+  // Live Weather Chip & Modal Styles
+  weatherChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  weatherChipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  weatherEmoji: { fontSize: 14 },
+  weatherTempText: { fontFamily: 'Inter_700Bold', fontSize: 12, color: '#111' },
+  weatherCondChipText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: Colors.freshlyRoasted },
+
+  weatherModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  weatherModalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, width: '100%', maxHeight: '85%', padding: 24, paddingTop: 12, backgroundColor: 'rgba(255, 255, 255, 0.92)' },
+  dragHandleWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 10 },
+  dragHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(0, 0, 0, 0.18)' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)' },
+  modalHeaderCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center' },
+  weatherModalTitle: { fontFamily: 'Inter_700Bold', fontSize: 19, color: '#111' },
+  weatherModalSubTitle: { fontFamily: 'Inter_500Medium', fontSize: 13, color: '#666', marginTop: 2 },
+
+  weatherHeroBox: {
+    backgroundColor: 'rgba(240, 248, 252, 0.9)',
+    borderRadius: 24,
+    padding: 20,
+    alignItems: 'center',
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(200, 230, 240, 0.8)',
+  },
+  weatherHeroEmoji: { fontSize: 44, marginBottom: 2 },
+  weatherHeroTemp: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 40, color: '#111', lineHeight: 44 },
+  weatherHeroCond: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#2A7FA0', marginTop: 2 },
+  weatherMetricRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', width: '100%', marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(200, 230, 240, 0.7)' },
+  weatherMetricItem: { alignItems: 'center', flex: 1 },
+  weatherMetricVal: { fontFamily: 'Inter_700Bold', fontSize: 14, color: '#111', marginTop: 4 },
+  weatherMetricLbl: { fontFamily: 'Inter_400Regular', fontSize: 11, color: '#666', marginTop: 2 },
+  weatherMetricDivider: { width: 1, height: 28, backgroundColor: 'rgba(200, 230, 240, 0.8)' },
+
+  forecastSectionTitle: { fontFamily: 'Inter_700Bold', fontSize: 14, color: '#111', marginTop: 14, marginBottom: 10 },
+  forecastList: { backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(0, 0, 0, 0.06)' },
+  forecastRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: 'rgba(0, 0, 0, 0.04)' },
+  forecastDayName: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#111', width: 54 },
+  forecastCondWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  forecastEmoji: { fontSize: 16 },
+  forecastCondText: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#444' },
+  forecastPopBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(232, 244, 248, 0.9)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginRight: 8 },
+  forecastPopText: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#2A7FA0' },
+  forecastTempRange: { fontFamily: 'Inter_500Medium', fontSize: 13, color: '#666' },
+
+  // Time Period Forecast Grid Styles (เช้า, บ่าย, เย็น, ดึก)
+  periodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  periodCard: {
+    width: (width - 68) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  periodHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  periodEmoji: { fontSize: 18 },
+  periodName: { fontFamily: 'Inter_700Bold', fontSize: 13, color: '#111' },
+  periodTime: { fontFamily: 'Inter_400Regular', fontSize: 10, color: '#777' },
+  periodTemp: { fontFamily: 'Inter_700Bold', fontSize: 18, color: '#111' },
+  periodCond: { fontFamily: 'Inter_400Regular', fontSize: 11, color: '#555', marginTop: 2 },
+  periodPopBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(232, 244, 248, 0.9)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, alignSelf: 'flex-start', marginTop: 4 },
+  periodPopText: { fontFamily: 'Inter_600SemiBold', fontSize: 9, color: '#2A7FA0' },
+
+  // Hourly Forecast Item Styles
+  hourlyItemCard: {
+    width: 68,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  hourlyItemActive: {
+    backgroundColor: 'rgba(232, 244, 248, 0.95)',
+    borderColor: '#2A7FA0',
+  },
+  hourlyTimeText: { fontFamily: 'Inter_500Medium', fontSize: 11, color: '#666' },
+  hourlyTimeActive: { fontFamily: 'Inter_700Bold', color: '#2A7FA0' },
+  hourlyEmoji: { fontSize: 20, marginVertical: 4 },
+  hourlyTemp: { fontFamily: 'Inter_700Bold', fontSize: 13, color: '#111' },
+  hourlyPop: { fontFamily: 'Inter_600SemiBold', fontSize: 9, color: '#2A7FA0', marginTop: 3 },
+  hourlyPopEmpty: { fontFamily: 'Inter_400Regular', fontSize: 9, color: '#CCC', marginTop: 3 },
+
+  // Floating Controls Column (Compass & Current Location Buttons)
+  floatingControlsCol: {
+    position: 'absolute',
+    right: 16,
+    bottom: 230,
+    gap: 10,
+    zIndex: 30,
+    alignItems: 'center',
+  },
+  floatingControlBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: Colors.freshlyRoasted,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  floatingControlText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: Colors.freshlyRoasted,
+    marginTop: -2,
+  },
+
+  // Compass Modal Card Styles
+  compassModalCard: {
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    width: '100%',
+    padding: 24,
+    paddingTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    alignItems: 'center',
+  },
+  compassBody: { alignItems: 'center', marginVertical: 14, width: '100%' },
+  compassHeadingNum: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 56, color: '#111', lineHeight: 56 },
+  compassHeadingDir: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: Colors.freshlyRoasted, marginBottom: 20 },
+  compassRoseWrap: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(240, 248, 252, 0.9)',
+    borderWidth: 3,
+    borderColor: 'rgba(200, 230, 240, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  compassRoseDial: { width: '100%', height: '100%', position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  compassNorthN: { position: 'absolute', top: 10, fontFamily: 'Inter_700Bold', fontSize: 16, color: '#FF4D4F' },
+  compassEastE: { position: 'absolute', right: 14, fontFamily: 'Inter_700Bold', fontSize: 15, color: '#333' },
+  compassSouthS: { position: 'absolute', bottom: 10, fontFamily: 'Inter_700Bold', fontSize: 15, color: '#333' },
+  compassWestW: { position: 'absolute', left: 14, fontFamily: 'Inter_700Bold', fontSize: 15, color: '#333' },
+  compassCenterPin: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#111', borderWidth: 2, borderColor: '#FFF', zIndex: 10 },
+  compassNeedleRed: { position: 'absolute', top: 35, width: 6, height: 65, backgroundColor: '#FF4D4F', borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  compassNeedleDark: { position: 'absolute', bottom: 35, width: 6, height: 65, backgroundColor: '#333', borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
+  btnResetNorth: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1E1E1E', paddingVertical: 14, paddingHorizontal: 20, borderRadius: 999, width: '100%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
+  btnResetNorthText: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' },
 });

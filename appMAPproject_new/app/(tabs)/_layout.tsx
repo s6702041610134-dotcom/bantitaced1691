@@ -23,13 +23,6 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
@@ -37,23 +30,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="create"
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color }) => <Feather name="map-pin" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="index"
         options={{
           title: '',
           tabBarIcon: () => (
             <View style={styles.fabContainer}>
               <View style={styles.fab}>
-                <Feather name="plus" size={24} color={Colors.oldLace} />
+                <Feather name="home" size={24} color={Colors.oldLace} />
               </View>
             </View>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: 'Map',
-          tabBarIcon: ({ color }) => <Feather name="map-pin" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -68,6 +61,12 @@ export default function TabLayout() {
         options={{
           title: 'Passport',
           tabBarIcon: ({ color }) => <Feather name="user" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
