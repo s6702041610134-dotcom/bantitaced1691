@@ -17,10 +17,12 @@ export default function HomeScreen() {
         {/* Top Header */}
         <View style={styles.header}>
           <Text style={styles.logoText}>Voyager</Text>
-          <Image 
-            source={{ uri: 'https://ui-avatars.com/api/?name=User&background=DCECEF&color=4B2E1F' }} 
-            style={styles.avatar} 
-          />
+          <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.8}>
+            <Image 
+              source={{ uri: 'https://ui-avatars.com/api/?name=Virgo&background=DCECEF&color=4B2E1F' }} 
+              style={styles.avatar} 
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Title */}
