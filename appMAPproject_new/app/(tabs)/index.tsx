@@ -39,7 +39,7 @@ export default function HomeScreen() {
               <OutlinedText text="Voyager" style={styles.logoText} strokeColor="#FFFFFF" strokeWidth={3.5} />
               <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.8}>
                 <Image
-                  source={{ uri: 'https://ui-avatars.com/api/?name=Virgo&background=DCECEF&color=4B2E1F' }}
+                  source={{ uri: 'https://ui-avatars.com/api/?name=Virgo&background=66023C&color=CAD183' }}
                   style={styles.avatar}
                 />
               </TouchableOpacity>
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(250, 246, 240, 0.45)',
+    backgroundColor: 'rgba(202, 209, 131, 0.35)',
   },
   container: {
     flex: 1,
@@ -146,26 +146,26 @@ const styles = StyleSheet.create({
     fontFamily: 'CormorantGaramond_600SemiBold',
     fontSize: 26,
     letterSpacing: 0.5,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#66023C',
   },
   title: {
     fontFamily: 'CormorantGaramond_400Regular_Italic',
     fontSize: 48,
     lineHeight: 50,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
     marginBottom: 8,
   },
   lede: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
     lineHeight: 20,
   },
 
@@ -192,19 +192,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(186, 221, 127, 0.65)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   fullCardTitle: {
     fontFamily: 'CormorantGaramond_600SemiBold',
     fontSize: 24,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
   },
   fullCardDesc: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(75, 46, 31, 0.75)',
+    color: 'rgba(57, 29, 1, 0.65)',
     marginTop: 2,
   },
 
@@ -224,14 +224,15 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(186, 221, 127, 0.5)',
     padding: 10,
     borderRadius: 14,
   },
   cardTitle: {
     fontFamily: 'CormorantGaramond_600SemiBold',
     fontSize: 20,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
     lineHeight: 24,
   },
 });
+

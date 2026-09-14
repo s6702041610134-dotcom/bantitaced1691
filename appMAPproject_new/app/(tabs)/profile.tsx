@@ -346,7 +346,7 @@ export default function ProfilePassportScreen() {
 
 const styles = StyleSheet.create({
   backgroundImage: { flex: 1, width: '100%', height: '100%' },
-  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(250, 246, 240, 0.45)' },
+  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(202, 209, 131, 0.38)' },
   container: { flex: 1 },
 
   // Header Title
@@ -359,21 +359,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
     fontSize: 10,
     letterSpacing: 1.5,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
   },
   headerTitle: {
     fontFamily: 'CormorantGaramond_600SemiBold',
     fontSize: 25,
-    color: Colors.freshlyRoasted,
+    color: '#391D01',
   },
 
   // Top Segment Control
   topSegmentWrap: { alignItems: 'center', marginVertical: 10, paddingHorizontal: 20 },
-  topSegment: { flexDirection: 'row', backgroundColor: '#EFECE6', borderRadius: 999, padding: 3, width: '100%' },
+  topSegment: { flexDirection: 'row', backgroundColor: 'rgba(186, 221, 127, 0.35)', borderRadius: 999, padding: 3, width: '100%' },
   segmentBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 999 },
-  segmentBtnActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  segmentText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#888' },
-  segmentTextActive: { fontFamily: 'Inter_600SemiBold', color: Colors.freshlyRoasted },
+  segmentBtnActive: { backgroundColor: '#66023C', shadowColor: '#66023C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 },
+  segmentText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#391D01' },
+  segmentTextActive: { fontFamily: 'Inter_600SemiBold', color: '#CAD183' },
 
   viewScrollContent: { paddingBottom: 40, alignItems: 'center', paddingHorizontal: 16 },
 
@@ -438,32 +438,32 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 1.5,
-    borderColor: Colors.freshlyRoasted,
+    borderColor: '#66023C',
     borderStyle: 'dashed',
-    backgroundColor: 'rgba(250,246,238,0.88)',
+    backgroundColor: 'rgba(202, 209, 131, 0.88)',
     justifyContent: 'center',
     alignItems: 'center',
     transform: [{ rotate: '-18deg' }],
     zIndex: 10,
   },
-  stampInkText: { fontFamily: 'Inter_700Bold', fontSize: 7, color: Colors.freshlyRoasted },
-  stampInkSub: { fontFamily: 'Inter_600SemiBold', fontSize: 6, color: Colors.freshlyRoasted },
-  stampInkDate: { fontFamily: 'Inter_500Medium', fontSize: 6, color: Colors.freshlyRoasted },
+  stampInkText: { fontFamily: 'Inter_700Bold', fontSize: 7, color: '#66023C' },
+  stampInkSub: { fontFamily: 'Inter_600SemiBold', fontSize: 6, color: '#66023C' },
+  stampInkDate: { fontFamily: 'Inter_500Medium', fontSize: 6, color: '#66023C' },
 
   topCardTextCol: { flex: 1, marginLeft: 14 },
   passportHeaderTag: { fontFamily: 'Inter_600SemiBold', fontSize: 8, color: '#8C7A6B', letterSpacing: 1.2 },
-  designerScriptTitle: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 36, color: Colors.freshlyRoasted, lineHeight: 38, marginTop: 2 },
+  designerScriptTitle: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 36, color: '#391D01', lineHeight: 38, marginTop: 2 },
   passportSubtextVertical: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 13, color: '#6A5649', letterSpacing: 3, marginTop: -4 },
   badgeLineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
-  goldBadge: { backgroundColor: '#EAD9C0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#C8B294' },
-  goldBadgeText: { fontFamily: 'Inter_600SemiBold', fontSize: 7, color: '#5A4637' },
-  cardPassportNo: { fontFamily: 'Courier', fontSize: 9, color: '#7A6B58' },
+  goldBadge: { backgroundColor: '#BADD7F', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#66023C' },
+  goldBadgeText: { fontFamily: 'Inter_600SemiBold', fontSize: 7, color: '#391D01' },
+  cardPassportNo: { fontFamily: 'Courier', fontSize: 9, color: '#391D01' },
 
   // Bottom Card Elements
   bottomCardHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   smallPhotoWrap: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#C0B3A0', overflow: 'hidden', position: 'relative' },
   smallPortraitPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
-  designerScriptTitleSmall: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 22, color: Colors.freshlyRoasted, lineHeight: 24 },
+  designerScriptTitleSmall: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 22, color: '#391D01', lineHeight: 24 },
   passportSubtextSmall: { fontFamily: 'Inter_600SemiBold', fontSize: 8, color: '#7A6B58', letterSpacing: 1 },
 
   // Structured Identity Table
@@ -480,23 +480,23 @@ const styles = StyleSheet.create({
 
   // Action Button
   actionRow: { marginTop: 18, width: width - 52 },
-  btnShareCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1E1E1E', paddingVertical: 14, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
-  btnShareCardText: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFF' },
+  btnShareCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#66023C', paddingVertical: 14, borderRadius: 999, shadowColor: '#66023C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 3 },
+  btnShareCardText: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#CAD183' },
 
   // Edit Identity Form
   editScrollContent: { padding: 20, paddingBottom: 40 },
-  editCard: { padding: 20, borderRadius: 24, backgroundColor: 'rgba(255, 255, 255, 0.88)' },
-  editHeading: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 22, color: Colors.freshlyRoasted },
-  editSubheading: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#777', marginTop: 2, marginBottom: 16 },
+  editCard: { padding: 20, borderRadius: 24, backgroundColor: 'rgba(202, 209, 131, 0.85)' },
+  editHeading: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 22, color: '#391D01' },
+  editSubheading: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#391D01', marginTop: 2, marginBottom: 16 },
   photoUploadSection: { alignItems: 'center', marginBottom: 16 },
-  previewUploadWrap: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: Colors.freshlyRoasted, overflow: 'hidden' },
+  previewUploadWrap: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: '#66023C', overflow: 'hidden' },
   previewUploadPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
-  btnChangePhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: 'rgba(240, 237, 232, 0.9)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
-  btnChangePhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: Colors.freshlyRoasted },
+  btnChangePhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: 'rgba(186, 221, 127, 0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(102, 2, 60, 0.2)' },
+  btnChangePhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#391D01' },
 
-  inputLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#333', marginTop: 12, marginBottom: 6 },
-  textInput: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#111', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 },
+  inputLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#391D01', marginTop: 12, marginBottom: 6 },
+  textInput: { backgroundColor: 'rgba(186, 221, 127, 0.25)', borderWidth: 1, borderColor: 'rgba(102, 2, 60, 0.2)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#391D01', shadowColor: '#391D01', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 },
   textAreaInput: { height: 70, textAlignVertical: 'top' },
-  btnSaveForm: { backgroundColor: '#1E1E1E', paddingVertical: 14, borderRadius: 999, alignItems: 'center', marginTop: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
-  btnSaveFormText: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#FFF' },
+  btnSaveForm: { backgroundColor: '#66023C', paddingVertical: 14, borderRadius: 999, alignItems: 'center', marginTop: 20, shadowColor: '#66023C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 3 },
+  btnSaveFormText: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#CAD183' },
 });

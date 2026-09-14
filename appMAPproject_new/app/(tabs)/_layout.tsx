@@ -8,11 +8,11 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.freshlyRoasted,
-        tabBarInactiveTintColor: 'rgba(75, 46, 31, 0.4)',
+        tabBarActiveTintColor: '#66023C',
+        tabBarInactiveTintColor: 'rgba(57, 29, 1, 0.38)',
         tabBarStyle: {
-          backgroundColor: Colors.oldLace,
-          borderTopColor: Colors.borderLight,
+          backgroundColor: '#CAD183',
+          borderTopColor: 'rgba(57, 29, 1, 0.14)',
           height: 84,
           paddingTop: 12,
         },
@@ -43,7 +43,7 @@ export default function TabLayout() {
           tabBarIcon: () => (
             <View style={styles.fabContainer}>
               <View style={styles.fab}>
-                <Feather name="home" size={24} color={Colors.oldLace} />
+                <Feather name="home" size={24} color="#CAD183" />
               </View>
             </View>
           ),
@@ -83,12 +83,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.freshlyRoasted,
+    backgroundColor: '#66023C',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.freshlyRoasted,
+    shadowColor: '#66023C',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
