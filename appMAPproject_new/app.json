@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Voyager",
+    "slug": "voyager-map",
+    "version": "1.0.0",
+    "scheme": "voyager",
+    "web": {
+      "bundler": "metro"
+    },
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.voyager.mapapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow Voyager to access your location to show it on the map.",
+        "NSLocationAlwaysUsageDescription": "Allow Voyager to access your location."
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Voyager to use your location."
+        }
+      ],
+      "expo-sharing"
+    ]
+  }
+}

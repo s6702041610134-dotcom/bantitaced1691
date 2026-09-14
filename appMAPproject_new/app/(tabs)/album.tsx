@@ -1,0 +1,1106 @@
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Modal,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '../../constants/Colors';
+import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+
+const { width } = Dimensions.get('window');
+const CELL_WIDTH = (width - 40) / 7;
+
+const monthNamesEnglish = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+// Cover Colors Palette Options for User Customization (Exact Palette from User Request)
+const BOOK_COLORS = [
+  { id: 'beige', name: 'Beige', hex: '#F4F2E0', textColor: '#4B2E1F' },
+  { id: 'champagne_pink', name: 'Champagne Pink', hex: '#F3D5CF', textColor: '#4B2E1F' },
+  { id: 'pale_silver', name: 'Pale Silver', hex: '#CCC3C0', textColor: '#222222' },
+  { id: 'metallic_silver', name: 'Metallic Silver', hex: '#A5ABAB', textColor: '#222222' },
+  { id: 'cool_gray', name: 'Cool Gray', hex: '#6F6F71', textColor: '#FFFFFF' },
+  { id: 'celadon', name: 'Celadon', hex: '#7DC4CE', textColor: '#FFFFFF' },
+  { id: 'lemon_yellow', name: 'Lemon Yellow', hex: '#EDE7B3', textColor: '#4B2E1F' },
+];
+
+type JournalEntry = {
+  dateKey: string;
+  day: number;
+  month: number;
+  year: number;
+  photoUrl: string;
+  title: string;
+  places: string[];
+  journalNote: string;
+};
+
+type StampItem = {
+  id: string;
+  title: string;
+  location: string;
+  date: string;
+  photoUrl: string;
+  note: string;
+};
+
+type TravelBook = {
+  id: string;
+  title: string;
+  subtitle: string;
+  colorHex: string;
+  textColor: string;
+  emblem: string;
+  stamps: StampItem[];
+};
+
+// Preset sample photos
+const samplePhotos: { [key: number]: string } = {
+  1: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=300&q=80',
+  2: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&q=80',
+  3: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80',
+  4: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=300&q=80',
+  5: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80',
+  6: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80',
+  7: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&q=80',
+  8: 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=300&q=80',
+  9: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&q=80',
+  10: 'https://images.unsplash.com/photo-1583417646698-f2b7f75fb192?w=300&q=80',
+  11: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=300&q=80',
+  12: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=300&q=80',
+};
+
+// Initial preset entries for April 2026
+const initialEntries: { [dateKey: string]: JournalEntry } = {};
+for (let d = 1; d <= 30; d++) {
+  const key = `2026-03-${d.toString().padStart(2, '0')}`;
+  initialEntries[key] = {
+    dateKey: key,
+    day: d,
+    month: 3,
+    year: 2026,
+    photoUrl: samplePhotos[(d % 12) + 1] || samplePhotos[1],
+    title: `ความทรงจำวันที่ ${d} เมษายน`,
+    places: [`สถานที่ ${d}`],
+    journalNote: `บันทึกความทรงจำการเดินทางสไตล์ Stamp Calendar ประจำวันที่ ${d} เมษายน 2026`,
+  };
+}
+
+// Initial Sample Travel Books
+const initialBooks: TravelBook[] = [
+  {
+    id: 'book-1',
+    title: 'PASSPORT TO THAILAND',
+    subtitle: 'BANGKOK & BEYOND 2026',
+    colorHex: '#7DC4CE',
+    textColor: '#FFFFFF',
+    emblem: 'compass',
+    stamps: [
+      {
+        id: 's1',
+        title: 'วัดพระแก้ว (Grand Palace)',
+        location: 'Bangkok, Thailand',
+        date: '12 เม.ย. 2026',
+        photoUrl: 'https://images.unsplash.com/photo-1583417646698-f2b7f75fb192?w=400&q=80',
+        note: 'ไหว้พระแก้วมรกตยามเช้า บรรยากาศงดงามตระการตามาก',
+      },
+      {
+        id: 's2',
+        title: 'ICONSIAM & Chao Phraya',
+        location: 'Bangkok, Thailand',
+        date: '13 เม.ย. 2026',
+        photoUrl: 'https://images.unsplash.com/photo-1605335122119-e58f00db1a86?w=400&q=80',
+        note: 'นั่งเรือด่วนเจ้าพระยาชมทัศนียภาพสองฝั่งแม่น้ำยามเย็น',
+      },
+      {
+        id: 's3',
+        title: 'อารีย์ คาเฟ่ฮ็อปปิ้ง',
+        location: 'Ari, Bangkok',
+        date: '14 เม.ย. 2026',
+        photoUrl: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&q=80',
+        note: 'จิบกาแฟดริปสโลว์ไลฟ์ย่านอารีย์ บรรยากาศอบอุ่น',
+      },
+      {
+        id: 's4',
+        title: 'เยาวราช ย่านของกิน',
+        location: 'Yaowarat, Bangkok',
+        date: '15 เม.ย. 2026',
+        photoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80',
+        note: 'ลุยของกินสตรีทฟู้ดเยาวราชตอนค่ำ อร่อยติดใจทุกร้าน',
+      },
+    ],
+  },
+  {
+    id: 'book-2',
+    title: 'JAPAN MEMORY JOURNAL',
+    subtitle: 'SPRING TOKYO 2026',
+    colorHex: '#F3D5CF',
+    textColor: '#4B2E1F',
+    emblem: 'globe',
+    stamps: [
+      {
+        id: 's5',
+        title: 'Shibuya Crossing',
+        location: 'Tokyo, Japan',
+        date: '02 พ.ค. 2026',
+        photoUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=400&q=80',
+        note: 'ห้าแยกชิบุย่าอันคึกคัก แสงสีและผู้คนในเมืองหลวงญี่ปุ่น',
+      },
+    ],
+  },
+];
+
+export default function AlbumScreen() {
+  const [activeTab, setActiveTab] = useState<'Calendar' | 'Books'>('Books');
+  
+  // --- Calendar States ---
+  const [currentYear, setCurrentYear] = useState(2026);
+  const [currentMonth, setCurrentMonth] = useState(3); // 3 = April
+  const [viewMode, setViewMode] = useState<'Compact' | 'Full'>('Full');
+  const [entries, setEntries] = useState<{ [dateKey: string]: JournalEntry }>(initialEntries);
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [dayModalVisible, setDayModalVisible] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [editPlaces, setEditPlaces] = useState('');
+  const [editPhotoUrl, setEditPhotoUrl] = useState('');
+
+  // --- Travel Books States ---
+  const [books, setBooks] = useState<TravelBook[]>(initialBooks);
+  const [selectedBook, setSelectedBook] = useState<TravelBook | null>(null);
+  const [createBookModalVisible, setCreateBookModalVisible] = useState(false);
+
+  // New Book Form States
+  const [newBookTitle, setNewBookTitle] = useState('');
+  const [newBookSubtitle, setNewBookSubtitle] = useState('');
+  const [newBookColor, setNewBookColor] = useState(BOOK_COLORS[0]);
+  const [newBookEmblem, setNewBookEmblem] = useState('compass');
+
+  // Add Stamp to Book Modal States
+  const [addStampModalVisible, setAddStampModalVisible] = useState(false);
+  const [newStampTitle, setNewStampTitle] = useState('');
+  const [newStampLocation, setNewStampLocation] = useState('');
+  const [newStampNote, setNewStampNote] = useState('');
+  const [newStampPhotoUrl, setNewStampPhotoUrl] = useState('');
+  const [newStampDate, setNewStampDate] = useState('');
+
+  // Import-from-calendar picker inside stamp form
+  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+
+  // Stamp Detail Preview Modal
+  const [selectedStamp, setSelectedStamp] = useState<StampItem | null>(null);
+
+  // --- Calendar Logic ---
+  const prevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+  const gridCells = [];
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    gridCells.push({ day: daysInPrevMonth - i, isCurrentMonth: false, dateKey: `prev-${i}` });
+  }
+  for (let d = 1; d <= daysInCurrentMonth; d++) {
+    const key = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+    gridCells.push({ day: d, isCurrentMonth: true, dateKey: key });
+  }
+  const remaining = (7 - (gridCells.length % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    gridCells.push({ day: i, isCurrentMonth: false, dateKey: `next-${i}` });
+  }
+
+  const openDayModal = (cell: { day: number; isCurrentMonth: boolean; dateKey: string }) => {
+    if (!cell.isCurrentMonth) return;
+    const existing = entries[cell.dateKey];
+    setSelectedDateKey(cell.dateKey);
+
+    if (existing) {
+      setEditTitle(existing.title);
+      setEditNote(existing.journalNote);
+      setEditPlaces(existing.places.join(', '));
+      setEditPhotoUrl(existing.photoUrl);
+    } else {
+      setEditTitle(`บันทึกวันที่ ${cell.day} ${monthNamesEnglish[currentMonth]}`);
+      setEditNote('');
+      setEditPlaces('');
+      setEditPhotoUrl('');
+    }
+    setDayModalVisible(true);
+  };
+
+  const pickPhotoForCalendar = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('ขอสิทธิ์เข้าถึงคลังภาพ', 'โปรดอนุญาตให้เปิดคลังภาพในโทรศัพท์ครับ');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setEditPhotoUrl(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log('Error picking photo:', err);
+    }
+  };
+
+  const saveCalendarEntry = () => {
+    if (!selectedDateKey) return;
+    const dayNum = parseInt(selectedDateKey.split('-')[2]);
+    const updatedEntry: JournalEntry = {
+      dateKey: selectedDateKey,
+      day: dayNum,
+      month: currentMonth,
+      year: currentYear,
+      photoUrl: editPhotoUrl || samplePhotos[(dayNum % 12) + 1],
+      title: editTitle || `บันทึกวันที่ ${dayNum}`,
+      places: editPlaces ? editPlaces.split(',').map(s => s.trim()) : ['จุดเดินทาง'],
+      journalNote: editNote,
+    };
+    setEntries(prev => ({ ...prev, [selectedDateKey]: updatedEntry }));
+    setDayModalVisible(false);
+  };
+
+  const deleteCalendarEntry = () => {
+    if (!selectedDateKey) return;
+    const updated = { ...entries };
+    delete updated[selectedDateKey];
+    setEntries(updated);
+    setDayModalVisible(false);
+  };
+
+  // --- Travel Book Creation Logic ---
+  const createNewBook = () => {
+    if (!newBookTitle.trim()) {
+      Alert.alert('โปรดระบุชื่อหนังสือ', 'กรุณากรอกคำที่จะพิมพ์บนปกหนังสือครับ');
+      return;
+    }
+
+    const created: TravelBook = {
+      id: `book-${Date.now()}`,
+      title: newBookTitle.trim().toUpperCase(),
+      subtitle: newBookSubtitle.trim() || 'TRAVEL JOURNAL & PASSPORT',
+      colorHex: newBookColor.hex,
+      textColor: newBookColor.textColor,
+      emblem: newBookEmblem,
+      stamps: [],
+    };
+
+    setBooks([created, ...books]);
+    setCreateBookModalVisible(false);
+
+    // Reset Form
+    setNewBookTitle('');
+    setNewBookSubtitle('');
+    setNewBookColor(BOOK_COLORS[0]);
+    setNewBookEmblem('compass');
+  };
+
+  // Pick Photo for Stamp in Book
+  const pickPhotoForStamp = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('ขอสิทธิ์เข้าถึงคลังภาพ', 'โปรดอนุญาตให้เปิดคลังภาพในโทรศัพท์ครับ');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setNewStampPhotoUrl(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log('Error picking photo:', err);
+    }
+  };
+
+  // Import from calendar entry into stamp form
+  const importCalendarEntry = (entry: JournalEntry) => {
+    const day = entry.day;
+    const monthShort = monthNamesEnglish[entry.month].slice(0, 3);
+    const dateStr = `${day} ${monthShort} ${entry.year}`;
+    setNewStampPhotoUrl(entry.photoUrl);
+    setNewStampDate(dateStr);
+    if (!newStampTitle.trim()) setNewStampTitle(entry.title);
+    if (!newStampNote.trim()) setNewStampNote(entry.journalNote);
+    if (!newStampLocation.trim()) setNewStampLocation(entry.places.join(', '));
+    setShowCalendarPicker(false);
+  };
+
+  // Add New Stamp to Opened Book
+  const addStampToBook = () => {
+    if (!selectedBook) return;
+    if (!newStampTitle.trim()) {
+      Alert.alert('โปรดระบุชื่อแสตมป์', 'กรอกชื่อสถานที่หรือความทรงจำครับ');
+      return;
+    }
+
+    const finalDate = newStampDate.trim() ||
+      `${new Date().getDate()} ${monthNamesEnglish[new Date().getMonth()].slice(0,3)} ${new Date().getFullYear()}`;
+
+    const newStamp: StampItem = {
+      id: `stamp-${Date.now()}`,
+      title: newStampTitle.trim(),
+      location: newStampLocation.trim() || 'Bangkok, Thailand',
+      date: finalDate,
+      photoUrl: newStampPhotoUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+      note: newStampNote.trim() || 'บันทึกความทรงจำการเดินทางสไตล์แสตมป์ที่น่าประทับใจ',
+    };
+
+    const updatedBook = {
+      ...selectedBook,
+      stamps: [newStamp, ...selectedBook.stamps],
+    };
+
+    setBooks(prev => prev.map(b => (b.id === selectedBook.id ? updatedBook : b)));
+    setSelectedBook(updatedBook);
+    setAddStampModalVisible(false);
+
+    // Reset form
+    setNewStampTitle('');
+    setNewStampLocation('');
+    setNewStampNote('');
+    setNewStampPhotoUrl('');
+    setNewStampDate('');
+    setShowCalendarPicker(false);
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Top Segmented Selector: [ 📮 Stamp Calendar | 📕 Travel Books & Stamps ] */}
+      <View style={styles.topSegmentWrap}>
+        <View style={styles.topSegment}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'Calendar' && styles.segmentBtnActive]}
+            onPress={() => setActiveTab('Calendar')}
+            activeOpacity={0.8}
+          >
+            <Feather name="calendar" size={15} color={activeTab === 'Calendar' ? Colors.freshlyRoasted : '#888'} />
+            <Text style={[styles.segmentText, activeTab === 'Calendar' && styles.segmentTextActive]}>
+              Stamp Calendar
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeTab === 'Books' && styles.segmentBtnActive]}
+            onPress={() => setActiveTab('Books')}
+            activeOpacity={0.8}
+          >
+            <Feather name="book-open" size={15} color={activeTab === 'Books' ? Colors.freshlyRoasted : '#888'} />
+            <Text style={[styles.segmentText, activeTab === 'Books' && styles.segmentTextActive]}>
+              Travel Books & Stamps
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* TAB 1: STAMP CALENDAR VIEW */}
+      {activeTab === 'Calendar' ? (
+        <>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.monthHeaderLeft}>
+              <Text style={styles.monthNumber}>
+                {(currentMonth + 1).toString().padStart(2, '0')}
+              </Text>
+              <View style={styles.monthNameWrap}>
+                <Text style={styles.yearText}>{currentYear}</Text>
+                <Text style={styles.monthNameText}>
+                  {monthNamesEnglish[currentMonth]}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.headerRight}>
+              <TouchableOpacity onPress={prevMonth} style={styles.arrowBtn}>
+                <Feather name="chevron-left" size={22} color="#555" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={nextMonth} style={styles.arrowBtn}>
+                <Feather name="chevron-right" size={22} color="#555" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Mode Toggle Switch (Compact / Full) */}
+          <View style={styles.toggleWrapper}>
+            <View style={styles.toggleCapsule}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, viewMode === 'Compact' && styles.toggleBtnActive]}
+                onPress={() => setViewMode('Compact')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.toggleText, viewMode === 'Compact' && styles.toggleTextActive]}>
+                  Compact
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, viewMode === 'Full' && styles.toggleBtnActive]}
+                onPress={() => setViewMode('Full')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.toggleText, viewMode === 'Full' && styles.toggleTextActive]}>
+                  Full
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Weekday Row */}
+          <View style={styles.weekDaysRow}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName, idx) => (
+              <Text key={idx} style={styles.weekDayText}>{dayName}</Text>
+            ))}
+          </View>
+
+          {viewMode === 'Full' ? (
+            <ScrollView contentContainerStyle={styles.gridContainer}>
+              <View style={styles.grid}>
+                {gridCells.map((cell, idx) => {
+                  const entry = cell.isCurrentMonth ? entries[cell.dateKey] : null;
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.cell}
+                      onPress={() => openDayModal(cell)}
+                      activeOpacity={cell.isCurrentMonth ? 0.7 : 1}
+                    >
+                      <Text style={[
+                        styles.cellDayNumber,
+                        !cell.isCurrentMonth && styles.cellDayNumberDimmed
+                      ]}>
+                        {cell.day}
+                      </Text>
+                      {cell.isCurrentMonth && entry?.photoUrl ? (
+                        <View style={styles.stampOuter}>
+                          <View style={styles.stampBorder}>
+                            <Image source={{ uri: entry.photoUrl }} style={styles.stampImage} />
+                          </View>
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          ) : (
+            <ScrollView style={styles.compactList}>
+              {Object.values(entries).filter(e => e.month === currentMonth && e.year === currentYear).map(item => (
+                <TouchableOpacity
+                  key={item.dateKey}
+                  style={styles.compactCard}
+                  onPress={() => {
+                    setSelectedDateKey(item.dateKey);
+                    setEditTitle(item.title);
+                    setEditNote(item.journalNote);
+                    setEditPlaces(item.places.join(', '));
+                    setEditPhotoUrl(item.photoUrl);
+                    setDayModalVisible(true);
+                  }}
+                >
+                  <View style={styles.compactStamp}>
+                    <Image source={{ uri: item.photoUrl }} style={styles.compactImage} />
+                  </View>
+                  <View style={styles.compactContent}>
+                    <Text style={styles.compactDate}>วันที่ {item.day} {monthNamesEnglish[currentMonth]}</Text>
+                    <Text style={styles.compactTitle}>{item.title}</Text>
+                    {item.journalNote ? <Text style={styles.compactNote} numberOfLines={2}>{item.journalNote}</Text> : null}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </>
+      ) : (
+        /* TAB 2: TRAVEL BOOKS & STAMP OVERVIEW GALLERY */
+        <ScrollView contentContainerStyle={styles.booksContainer}>
+          <View style={styles.booksHeader}>
+            <View>
+              <Text style={styles.booksTitle}>MY TRAVEL PASSPORTS</Text>
+              <Text style={styles.booksSubtitle}>สมุดสะสมแสตมป์การเดินทางส่วนตัว</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.btnCreateBook}
+              onPress={() => setCreateBookModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Feather name="plus" size={18} color="#fff" />
+              <Text style={styles.btnCreateBookText}>สร้างหนังสือ</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Book Shelf List */}
+          <View style={styles.shelfGrid}>
+            {books.map(book => (
+              <TouchableOpacity
+                key={book.id}
+                style={[styles.bookCover, { backgroundColor: book.colorHex }]}
+                onPress={() => setSelectedBook(book)}
+                activeOpacity={0.9}
+              >
+                {/* Gold Foil Spine Line */}
+                <View style={styles.bookSpineLine} />
+                
+                {/* Cover Emblem */}
+                <View style={styles.bookEmblemWrap}>
+                  <Feather name={book.emblem as any} size={28} color={book.textColor} />
+                </View>
+
+                {/* Cover Title */}
+                <Text style={[styles.bookCoverTitle, { color: book.textColor }]}>
+                  {book.title}
+                </Text>
+                <Text style={[styles.bookCoverSubtitle, { color: book.textColor }]}>
+                  {book.subtitle}
+                </Text>
+
+                {/* Stamp Counter Badge */}
+                <View style={styles.bookBadge}>
+                  <Text style={styles.bookBadgeText}>📮 {book.stamps.length} STAMPS</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      )}
+
+      {/* --- MODAL 1: OPENED BOOK & STAMP OVERVIEW GALLERY --- */}
+      <Modal visible={selectedBook !== null} animationType="slide">
+        {selectedBook && (
+          <SafeAreaView style={styles.openedBookContainer} edges={['top', 'bottom']}>
+            {/* Book Header Bar */}
+            <View style={styles.openedBookNav}>
+              <TouchableOpacity onPress={() => setSelectedBook(null)} style={styles.openedBookBackBtn} activeOpacity={0.7}>
+                <Feather name="arrow-left" size={20} color="#333" />
+                <Text style={styles.openedBookBackText}>ปิดสมุด</Text>
+              </TouchableOpacity>
+              <Text style={styles.openedBookNavTitle} numberOfLines={1}>
+                {selectedBook.title}
+              </Text>
+              <TouchableOpacity
+                style={styles.btnAddStamp}
+                onPress={() => setAddStampModalVisible(true)}
+                activeOpacity={0.8}
+              >
+                <Feather name="plus" size={15} color="#fff" />
+                <Text style={styles.btnAddStampText}>เพิ่มแสตมป์</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.openedBookContent}>
+              {/* Passport Bio Intro Banner */}
+              <View style={[styles.passportBioCard, { borderTopColor: selectedBook.colorHex }]}>
+                <View style={styles.passportBioHead}>
+                  <Feather name={selectedBook.emblem as any} size={32} color={selectedBook.colorHex} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.passportBioTitle}>{selectedBook.title}</Text>
+                    <Text style={styles.passportBioSub}>{selectedBook.subtitle}</Text>
+                  </View>
+                </View>
+                <View style={styles.passportBioDivider} />
+                <View style={styles.passportBioRow}>
+                  <Text style={styles.passportBioLbl}>STAMPS COLLECTED:</Text>
+                  <Text style={styles.passportBioVal}>{selectedBook.stamps.length} สถานที่</Text>
+                </View>
+              </View>
+
+              {/* Stamp Collection Overview Gallery Section */}
+              <View style={styles.stampGallerySection}>
+                <Text style={styles.stampGalleryHeading}>STAMP COLLECTION OVERVIEW 📮</Text>
+                <Text style={styles.stampGallerySubheading}>ภาพรวมแสตมป์สถานที่ทั้งหมดที่สะสมในเล่มนี้</Text>
+
+                {selectedBook.stamps.length === 0 ? (
+                  <View style={styles.emptyStampsWrap}>
+                    <Feather name="award" size={40} color="#ccc" />
+                    <Text style={styles.emptyStampsText}>ยังไม่มีแสตมป์ในสมุดเล่มนี้</Text>
+                    <TouchableOpacity
+                      style={styles.btnAddStampEmpty}
+                      onPress={() => setAddStampModalVisible(true)}
+                    >
+                      <Text style={styles.btnAddStampEmptyText}>+ เพิ่มแสตมป์แรกของคุณ</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.stampGrid}>
+                    {selectedBook.stamps.map(stamp => (
+                      <TouchableOpacity
+                        key={stamp.id}
+                        style={styles.stampCard}
+                        onPress={() => setSelectedStamp(stamp)}
+                        activeOpacity={0.8}
+                      >
+                        {/* Jagged Postage Stamp Frame */}
+                        <View style={styles.stampFrame}>
+                          <Image source={{ uri: stamp.photoUrl }} style={styles.stampPhoto} />
+                          
+                          {/* Circular Postmark Ink Seal Overlay */}
+                          <View style={styles.postmarkSeal}>
+                            <Text style={styles.postmarkText}>POST</Text>
+                            <Text style={styles.postmarkDate}>{stamp.date.split(' ')[0]}</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.stampCardTitle} numberOfLines={1}>
+                          {stamp.title}
+                        </Text>
+                        <Text style={styles.stampCardLocation} numberOfLines={1}>
+                          📍 {stamp.location}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        )}
+      </Modal>
+
+      {/* --- MODAL 2: CREATE NEW BOOK (CUSTOM TITLE & COLOR) --- */}
+      <Modal visible={createBookModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>สร้างหนังสือเดินทางใหม่ 📕</Text>
+              <TouchableOpacity onPress={() => setCreateBookModalVisible(false)}>
+                <Feather name="x" size={22} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.label}>พิมพ์คำบนปกหนังสือ (Book Title)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="เช่น MY TRAVEL PASSPORT 2026, ทริปญี่ปุ่น"
+                placeholderTextColor="#aaa"
+                value={newBookTitle}
+                onChangeText={setNewBookTitle}
+              />
+
+              <Text style={styles.label}>คำบรรยายใต้ปก (Subtitle / Passport No.)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="เช่น BANGKOK & BEYOND, Virgo Collection"
+                placeholderTextColor="#aaa"
+                value={newBookSubtitle}
+                onChangeText={setNewBookSubtitle}
+              />
+
+              <Text style={styles.label}>เลือกสีหนังสือ (Book Cover Color)</Text>
+              <View style={styles.colorPalette}>
+                {BOOK_COLORS.map(c => (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: c.hex },
+                      newBookColor.id === c.id && styles.colorOptionSelected,
+                    ]}
+                    onPress={() => setNewBookColor(c)}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.label}>เลือกตราสัญลักษณ์หน้าปก (Cover Emblem)</Text>
+              <View style={styles.emblemRow}>
+                {['compass', 'globe', 'map-pin', 'navigation', 'star'].map(emb => (
+                  <TouchableOpacity
+                    key={emb}
+                    style={[styles.emblemOption, newBookEmblem === emb && styles.emblemOptionSelected]}
+                    onPress={() => setNewBookEmblem(emb)}
+                  >
+                    <Feather name={emb as any} size={20} color={newBookEmblem === emb ? Colors.freshlyRoasted : '#888'} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.btnCancel} onPress={() => setCreateBookModalVisible(false)}>
+                <Text style={styles.btnCancelText}>ยกเลิก</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnSave} onPress={createNewBook}>
+                <Text style={styles.btnSaveText}>สร้างหนังสือ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* --- MODAL 3: ADD STAMP TO BOOK --- */}
+      <Modal visible={addStampModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>เพิ่มแสตมป์ในหนังสือ 📮</Text>
+              <TouchableOpacity onPress={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
+                <Feather name="x" size={22} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+              {/* Photo preview + pickers */}
+              <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                {newStampPhotoUrl ? (
+                  <Image source={{ uri: newStampPhotoUrl }} style={{ width: 110, height: 110, borderRadius: 10, marginBottom: 4 }} />
+                ) : (
+                  <View style={{ width: 110, height: 110, backgroundColor: '#eee', borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 4 }}>
+                    <Feather name="image" size={32} color="#aaa" />
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                  <TouchableOpacity style={styles.btnPickPhoto} onPress={pickPhotoForStamp}>
+                    <Feather name="camera" size={13} color="#333" />
+                    <Text style={styles.btnPickPhotoText}>จากโทรศัพท์</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.btnPickPhoto, { backgroundColor: '#E8F4F8' }]}
+                    onPress={() => setShowCalendarPicker(prev => !prev)}
+                  >
+                    <Feather name="calendar" size={13} color="#2A7FA0" />
+                    <Text style={[styles.btnPickPhotoText, { color: '#2A7FA0' }]}>นำเข้าจากปฏิทิน</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Calendar Entry Picker */}
+              {showCalendarPicker && (() => {
+                const calEntries = Object.values(entries).filter(e => e.photoUrl);
+                return (
+                  <View style={styles.calPickerWrap}>
+                    <Text style={styles.calPickerTitle}>📸 เลือกจากบันทึกปฏิทิน</Text>
+                    {calEntries.length === 0 ? (
+                      <Text style={{ fontSize: 12, color: '#999', textAlign: 'center', padding: 12 }}>ยังไม่มีบันทึกในปฏิทิน</Text>
+                    ) : (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+                        <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 4 }}>
+                          {calEntries.map(entry => (
+                            <TouchableOpacity
+                              key={entry.dateKey}
+                              style={styles.calPickerItem}
+                              onPress={() => importCalendarEntry(entry)}
+                              activeOpacity={0.75}
+                            >
+                              <Image source={{ uri: entry.photoUrl }} style={styles.calPickerImg} />
+                              <Text style={styles.calPickerDate} numberOfLines={1}>
+                                {entry.day} {monthNamesEnglish[entry.month].slice(0,3)}
+                              </Text>
+                              <Text style={styles.calPickerName} numberOfLines={1}>{entry.title}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    )}
+                  </View>
+                );
+              })()}
+
+              <Text style={styles.label}>ชื่อสถานที่ / แสตมป์</Text>
+              <TextInput style={styles.input} placeholder="เช่น วัดพระแก้ว, สยามพารากอน" value={newStampTitle} onChangeText={setNewStampTitle} />
+
+              <Text style={styles.label}>เมือง / ประเทศ</Text>
+              <TextInput style={styles.input} placeholder="เช่น Bangkok, Thailand" value={newStampLocation} onChangeText={setNewStampLocation} />
+
+              {newStampDate ? (
+                <View style={styles.importedDateBadge}>
+                  <Feather name="calendar" size={12} color="#2A7FA0" />
+                  <Text style={styles.importedDateText}>วันที่จากปฏิทิน: {newStampDate}</Text>
+                  <TouchableOpacity onPress={() => setNewStampDate('')}>
+                    <Feather name="x" size={12} color="#999" />
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+
+              <Text style={styles.label}>บันทึกบรรยายสั้นๆ ✍️</Text>
+              <TextInput style={[styles.input, styles.textArea]} placeholder="เล่าความประทับใจสั้นๆ..." multiline numberOfLines={3} value={newStampNote} onChangeText={setNewStampNote} />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.btnCancel} onPress={() => { setAddStampModalVisible(false); setShowCalendarPicker(false); }}>
+                <Text style={styles.btnCancelText}>ยกเลิก</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnSave} onPress={addStampToBook}>
+                <Text style={styles.btnSaveText}>บันทึกแสตมป์</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* --- MODAL 4: FULL STAMP PREVIEW --- */}
+      <Modal visible={selectedStamp !== null} transparent animationType="fade">
+        {selectedStamp && (
+          <View style={styles.stampDetailModalBg}>
+            <View style={styles.stampDetailCard}>
+              <TouchableOpacity style={styles.stampDetailCloseBtn} onPress={() => setSelectedStamp(null)}>
+                <Feather name="x" size={20} color="#fff" />
+              </TouchableOpacity>
+
+              <View style={styles.stampDetailFrame}>
+                <Image source={{ uri: selectedStamp.photoUrl }} style={styles.stampDetailPhoto} />
+              </View>
+
+              <Text style={styles.stampDetailTitle}>{selectedStamp.title}</Text>
+              <Text style={styles.stampDetailLoc}>📍 {selectedStamp.location} • {selectedStamp.date}</Text>
+              <Text style={styles.stampDetailNote}>"{selectedStamp.note}"</Text>
+            </View>
+          </View>
+        )}
+      </Modal>
+
+      {/* --- MODAL 5: CALENDAR DAY EDIT MODAL --- */}
+      <Modal visible={dayModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>บันทึกความทรงจำแสตมป์ 📮</Text>
+              <TouchableOpacity onPress={() => setDayModalVisible(false)}>
+                <Feather name="x" size={22} color={Colors.freshlyRoasted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.modalPhotoSection}>
+                {editPhotoUrl ? (
+                  <View style={styles.largeStamp}>
+                    <Image source={{ uri: editPhotoUrl }} style={styles.largeStampImage} />
+                  </View>
+                ) : (
+                  <View style={styles.largeStampPlaceholder}>
+                    <Feather name="image" size={32} color="#aaa" />
+                  </View>
+                )}
+                <TouchableOpacity style={styles.btnPickPhoto} onPress={pickPhotoForCalendar}>
+                  <Feather name="camera" size={16} color={Colors.freshlyRoasted} />
+                  <Text style={styles.btnPickPhotoText}>เลือกรูปจากโทรศัพท์</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>ชื่อบันทึกความทรงจำ</Text>
+              <TextInput style={styles.input} value={editTitle} onChangeText={setEditTitle} placeholder="ระบุหัวข้อ..." />
+
+              <Text style={styles.label}>สถานที่ไป</Text>
+              <TextInput style={styles.input} value={editPlaces} onChangeText={setEditPlaces} placeholder="คั่นด้วยเครื่องหมายจุลภาค ," />
+
+              <Text style={styles.label}>บรรยายความทรงจำสั้นๆ (Journal Note) ✍️</Text>
+              <TextInput style={[styles.input, styles.textArea]} value={editNote} onChangeText={setEditNote} placeholder="เขียนบรรยายบรรยากาศสั้นๆ..." multiline numberOfLines={3} />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.btnDelete} onPress={deleteCalendarEntry}>
+                <Text style={styles.btnDeleteText}>ลบ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnSave} onPress={saveCalendarEntry}>
+                <Text style={styles.btnSaveText}>บันทึก</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#FAF8F5' },
+
+  // Top Segment Bar
+  topSegmentWrap: { alignItems: 'center', marginVertical: 8, paddingHorizontal: 20 },
+  topSegment: { flexDirection: 'row', backgroundColor: '#EFECE6', borderRadius: 999, padding: 3, width: '100%' },
+  segmentBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 999 },
+  segmentBtnActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  segmentText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#888' },
+  segmentTextActive: { fontFamily: 'Inter_600SemiBold', color: Colors.freshlyRoasted },
+
+  // Calendar Header
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 4, marginBottom: 4 },
+  monthHeaderLeft: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  monthNumber: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 64, color: '#222', lineHeight: 68 },
+  monthNameWrap: { justifyContent: 'center' },
+  yearText: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', marginBottom: -4 },
+  monthNameText: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 32, color: '#333' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  arrowBtn: { padding: 6 },
+
+  toggleWrapper: { alignItems: 'center', marginVertical: 8 },
+  toggleCapsule: { flexDirection: 'row', backgroundColor: '#EFECE6', borderRadius: 999, padding: 3, width: 240 },
+  toggleBtn: { flex: 1, paddingVertical: 6, borderRadius: 999, alignItems: 'center' },
+  toggleBtnActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  toggleText: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#888' },
+  toggleTextActive: { color: '#222', fontFamily: 'Inter_600SemiBold' },
+
+  weekDaysRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20, marginBottom: 6 },
+  weekDayText: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#aaa', width: CELL_WIDTH, textAlign: 'center' },
+
+  gridContainer: { paddingHorizontal: 20, paddingBottom: 40 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: CELL_WIDTH, height: 72, padding: 2, alignItems: 'flex-start' },
+  cellDayNumber: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#333', marginLeft: 2 },
+  cellDayNumberDimmed: { color: '#ddd' },
+
+  stampOuter: { width: CELL_WIDTH - 6, height: 48, marginTop: 2, backgroundColor: '#fff', borderRadius: 4, padding: 2, borderWidth: 1, borderColor: '#e5e0d8', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  stampBorder: { flex: 1, borderRadius: 2, overflow: 'hidden' },
+  stampImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+
+  compactList: { flex: 1, paddingHorizontal: 20 },
+  compactCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#EFECE6', alignItems: 'center', gap: 12 },
+  compactStamp: { width: 60, height: 60, borderRadius: 8, overflow: 'hidden', backgroundColor: '#eee' },
+  compactImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  compactContent: { flex: 1 },
+  compactDate: { fontFamily: 'Inter_400Regular', fontSize: 11, color: '#888' },
+  compactTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 18, color: '#222' },
+  compactNote: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#666', marginTop: 2 },
+
+  // Bookshelf Tab Styles
+  booksContainer: { paddingHorizontal: 20, paddingBottom: 40 },
+  booksHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 14 },
+  booksTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 22, color: Colors.freshlyRoasted, letterSpacing: 1 },
+  booksSubtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#777', marginTop: 2 },
+  btnCreateBook: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.freshlyRoasted, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  btnCreateBookText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#fff' },
+
+  shelfGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
+  bookCover: { width: (width - 56) / 2, height: 210, borderRadius: 12, padding: 14, justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 4, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 6, position: 'relative', overflow: 'hidden' },
+  bookSpineLine: { position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: 'rgba(255,255,255,0.2)' },
+  bookEmblemWrap: { alignSelf: 'flex-end', opacity: 0.9 },
+  bookCoverTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 18, letterSpacing: 1.5, marginTop: 20 },
+  bookCoverSubtitle: { fontFamily: 'Inter_400Regular', fontSize: 10, opacity: 0.8 },
+  bookBadge: { backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, alignSelf: 'flex-start' },
+  bookBadgeText: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#fff' },
+
+  // Opened Book View Modal
+  openedBookContainer: { flex: 1, backgroundColor: '#FAF8F5' },
+  openedBookNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 6 : 10,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EFECE6',
+    backgroundColor: '#FAF8F5',
+  },
+  openedBookBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingRight: 4 },
+  openedBookBackText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#333' },
+  openedBookNavTitle: { flex: 1, textAlign: 'center', fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 16, color: '#222', marginHorizontal: 6 },
+  btnAddStamp: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.freshlyRoasted, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  btnAddStampText: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#fff' },
+
+  openedBookContent: { paddingHorizontal: 20, paddingVertical: 16 },
+  passportBioCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#EFECE6', borderTopWidth: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2, marginBottom: 20 },
+  passportBioHead: { flexDirection: 'row', alignItems: 'center' },
+  passportBioTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 20, color: '#222' },
+  passportBioSub: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#777' },
+  passportBioDivider: { height: 1, backgroundColor: '#eee', marginVertical: 12 },
+  passportBioRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  passportBioLbl: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#888' },
+  passportBioVal: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#222' },
+
+  // Stamp Overview Gallery Section
+  stampGallerySection: { marginTop: 10 },
+  stampGalleryHeading: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 20, color: '#222', letterSpacing: 1 },
+  stampGallerySubheading: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#777', marginBottom: 16 },
+  emptyStampsWrap: { alignItems: 'center', paddingVertical: 40 },
+  emptyStampsText: { fontFamily: 'Inter_400Regular', color: '#888', marginTop: 10 },
+  btnAddStampEmpty: { marginTop: 14, backgroundColor: Colors.butter, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
+  btnAddStampEmptyText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: Colors.freshlyRoasted },
+
+  stampGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  stampCard: { width: (width - 54) / 2, backgroundColor: '#fff', borderRadius: 12, padding: 8, borderWidth: 1, borderColor: '#EFECE6', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  stampFrame: { height: 130, borderRadius: 8, overflow: 'hidden', backgroundColor: '#eee', position: 'relative' },
+  stampPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
+  postmarkSeal: { position: 'absolute', bottom: 6, right: 6, width: 44, height: 44, borderRadius: 22, borderStyle: 'dashed', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '-15deg' }] },
+  postmarkText: { fontFamily: 'Inter_700Bold', fontSize: 8, color: '#fff' },
+  postmarkDate: { fontFamily: 'Inter_500Medium', fontSize: 7, color: '#fff' },
+  stampCardTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 15, color: '#222', marginTop: 8 },
+  stampCardLocation: { fontFamily: 'Inter_400Regular', fontSize: 11, color: '#777', marginTop: 2 },
+
+  // Color Palette Selector
+  colorPalette: { flexDirection: 'row', gap: 10, marginVertical: 8 },
+  colorOption: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'transparent' },
+  colorOptionSelected: { borderColor: Colors.freshlyRoasted, transform: [{ scale: 1.1 }] },
+
+  emblemRow: { flexDirection: 'row', gap: 12, marginVertical: 8 },
+  emblemOption: { padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff' },
+  emblemOptionSelected: { borderColor: Colors.freshlyRoasted, backgroundColor: Colors.butter },
+
+  // Stamp Detail Preview Modal
+  stampDetailModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  stampDetailCard: { width: '100%', backgroundColor: '#FAF8F5', borderRadius: 20, padding: 20, alignItems: 'center', position: 'relative' },
+  stampDetailCloseBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  stampDetailFrame: { width: '100%', height: 220, borderRadius: 12, overflow: 'hidden', marginBottom: 14 },
+  stampDetailPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
+  stampDetailTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 24, color: '#222', textAlign: 'center' },
+  stampDetailLoc: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#777', marginTop: 4 },
+  stampDetailNote: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 16, color: '#444', marginTop: 12, textAlign: 'center', lineHeight: 22 },
+
+  // Modals General
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#FAF8F5', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, maxHeight: '90%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 12 },
+  modalTitle: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 20, color: '#222' },
+  modalBody: { marginVertical: 12 },
+  modalPhotoSection: { alignItems: 'center', marginVertical: 10 },
+  largeStamp: { width: 120, height: 120, backgroundColor: '#fff', padding: 6, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
+  largeStampImage: { width: '100%', height: '100%', borderRadius: 4 },
+  largeStampPlaceholder: { width: 120, height: 120, backgroundColor: '#eee', borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  btnPickPhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: '#EFECE6', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  btnPickPhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#333' },
+  label: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#444', marginTop: 12, marginBottom: 4 },
+  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontFamily: 'Inter_400Regular', fontSize: 13, color: '#222' },
+  textArea: { height: 70, textAlignVertical: 'top' },
+
+  // Calendar-to-Stamp import picker
+  calPickerWrap: { backgroundColor: '#F0F8FC', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#C8E6F0' },
+  calPickerTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#2A7FA0' },
+  calPickerItem: { width: 80, alignItems: 'center' },
+  calPickerImg: { width: 72, height: 72, borderRadius: 8, backgroundColor: '#ddd', borderWidth: 2, borderColor: '#fff' },
+  calPickerDate: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#2A7FA0', marginTop: 4 },
+  calPickerName: { fontFamily: 'Inter_400Regular', fontSize: 10, color: '#444', textAlign: 'center' },
+  importedDateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E8F4F8', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginTop: 8, alignSelf: 'flex-start' },
+  importedDateText: { fontFamily: 'Inter_500Medium', fontSize: 11, color: '#2A7FA0', flex: 1 },
+  modalFooter: { flexDirection: 'row', gap: 12, paddingTop: 10 },
+  btnCancel: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
+  btnCancelText: { fontFamily: 'Inter_600SemiBold', color: '#555', fontSize: 14 },
+  btnDelete: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#FF3B30', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
+  btnDeleteText: { fontFamily: 'Inter_600SemiBold', color: '#FF3B30', fontSize: 14 },
+  btnSave: { flex: 1, backgroundColor: '#222', paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
+  btnSaveText: { fontFamily: 'Inter_600SemiBold', color: '#fff', fontSize: 14 },
+});

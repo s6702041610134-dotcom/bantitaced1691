@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Voyager — Travel Planner</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Web Layout Wrapper -->
+  <div class="stage">
+    
+    <!-- Intro / Branding Side -->
+    <div class="intro hide-on-mobile">
+      <div class="kicker">Travel like a story</div>
+      <h1>A journal for<br>your next journey</h1>
+      <p>Interactive prototype featuring Travel Receipt printing and Monthly Travel Albums. Designed with a Vintage European Travel Editorial aesthetic.</p>
+      
+      <div class="swatches">
+        <div class="swatch" style="background:var(--color-old-lace);" title="Old Lace"></div>
+        <div class="swatch" style="background:var(--color-freshly-roasted);" title="Freshly Roasted"></div>
+        <div class="swatch" style="background:var(--color-butter);" title="Butter"></div>
+        <div class="swatch" style="background:var(--color-oyster-bay);" title="Oyster Bay"></div>
+      </div>
+    </div>
+
+    <!-- The App Interface (Phone Frame) -->
+    <div class="phone">
+      <div class="screen" id="app-root">
+        
+        <!-- Status Bar -->
+        <div class="statusbar">
+          <span class="time">9:41</span>
+          <span class="dynamic-island"></span>
+          <span class="icons">
+            <svg width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+        
+        <!-- Dynamic Content Area -->
+        <div class="content-area" id="content-area">
+          <!-- Views will be injected here via JS -->
+        </div>
+
+        <!-- Global Overlays / Modals will be injected here -->
+        <div id="modal-container"></div>
+
+        <!-- Bottom Navigation -->
+        <nav class="navbar" id="bottom-nav">
+          <button class="nav-btn active" data-tab="home" onclick="app.navigate('home')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-btn" data-tab="feed" onclick="app.navigate('feed')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2" transform="rotate(45 12 12)"/></svg>
+            <span>Explore</span>
+          </button>
+          <button class="nav-btn center-fab" onclick="app.openCreateModal()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <button class="nav-btn" data-tab="map" onclick="app.navigate('map')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21c-4-4.5-7-8.2-7-11a7 7 0 0114 0c0 2.8-3 6.5-7 11z"/></svg>
+            <span>Map</span>
+          </button>
+          <button class="nav-btn" data-tab="album" onclick="app.navigate('album')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <span>Album</span>
+          </button>
+        </nav>
+        
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Print Area (Only visible during printing) -->
+  <div id="print-area"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
