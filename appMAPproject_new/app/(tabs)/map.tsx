@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
@@ -292,9 +293,10 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Interactive Map View */}
+      {/* Interactive Map View (Apple Maps on iOS, Google Maps on Android) */}
       <MapView
         ref={mapRef}
+        provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFill}
         onPress={handleMapPress}
         customMapStyle={OYSTER_BAY_MAP_STYLE}
@@ -371,9 +373,14 @@ export default function MapScreen() {
             ))}
           </ScrollView>
 
-          {/* Live Search Dropdown */}
+          {/* Live Search Dropdown (Scrollable with nestedScrollEnabled for smooth scrolling) */}
           {showDropdown && searchResults.length > 0 && (
-            <View style={styles.dropdown}>
+            <ScrollView
+              style={styles.dropdown}
+              nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={true}
+            >
               {searchResults.map((item) => (
                 <TouchableOpacity
                   key={item.place_id}
@@ -386,7 +393,7 @@ export default function MapScreen() {
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           )}
         </View>
       </SafeAreaView>

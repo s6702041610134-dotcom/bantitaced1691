@@ -8,7 +8,6 @@ import {
   Image,
   TextInput,
   Dimensions,
-  Modal,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -23,32 +22,32 @@ import * as MediaLibrary from 'expo-media-library';
 
 const { width } = Dimensions.get('window');
 
+export type FilterMode = 'normal' | 'grayscale' | 'vintage';
+
 type IdentityData = {
   name: string;
   profession: string;
   characteristic: string;
-  sign: string;
-  favoriteColor: string;
   favoriteSeries: string;
   favoritePlace: string;
   personalPhrase: string;
   signature: string;
   photoUri: string;
   passportNo: string;
+  filterMode: FilterMode;
 };
 
 const defaultIdentity: IdentityData = {
   name: 'Virgo Boonyarid',
   profession: 'Designer & Mobile Engineer',
   characteristic: 'Creative • Minimalist • Explorer',
-  sign: 'Virgo ♍',
-  favoriteColor: '#4B2E1F Coffee Brown',
   favoriteSeries: 'Emily in Paris / Midnight in Paris',
   favoritePlace: 'Kyoto, Japan & Bangkok',
   personalPhrase: '“Design is intelligence made visible.”',
   signature: 'Virgo Boonyarid',
   photoUri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
   passportNo: 'PASSPORT-NO. 8829-TH',
+  filterMode: 'grayscale', // Default vintage grayscale portrait
 };
 
 export default function ProfilePassportScreen() {
@@ -172,10 +171,14 @@ export default function ProfilePassportScreen() {
                 <View style={styles.cornerFlourishBR} />
 
                 <View style={styles.topCardRow}>
-                  {/* Grayscale Vintage Portrait Photo with Official Stamp */}
+                  {/* Portrait Photo Frame with Filter & Official Stamp */}
                   <View style={styles.photoFrameWrap}>
                     <Image source={{ uri: identity.photoUri }} style={styles.portraitPhoto} />
                     
+                    {/* Photo Filter Overlays */}
+                    {identity.filterMode === 'grayscale' && <View style={styles.grayscaleOverlay} />}
+                    {identity.filterMode === 'vintage' && <View style={styles.vintageOverlay} />}
+
                     {/* Circular Ink Official Stamp Overlay */}
                     <View style={styles.officialInkStamp}>
                       <Text style={styles.stampInkText}>VERIFIED</Text>
@@ -212,6 +215,8 @@ export default function ProfilePassportScreen() {
                 <View style={styles.bottomCardHeaderRow}>
                   <View style={styles.smallPhotoWrap}>
                     <Image source={{ uri: identity.photoUri }} style={styles.smallPortraitPhoto} />
+                    {identity.filterMode === 'grayscale' && <View style={styles.grayscaleOverlay} />}
+                    {identity.filterMode === 'vintage' && <View style={styles.vintageOverlay} />}
                   </View>
                   <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text style={styles.designerScriptTitleSmall}>Designer</Text>
@@ -232,26 +237,14 @@ export default function ProfilePassportScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.tableRowHalf}>
-                    <View style={[styles.tableCell, { flex: 1 }]}>
-                      <Text style={styles.cellLabel}>CHARACTERISTIC</Text>
-                      <Text style={styles.cellValue}>{identity.characteristic}</Text>
-                    </View>
-                    <View style={[styles.tableCell, { flex: 1, borderLeftWidth: 1, borderLeftColor: '#D8CEBE' }]}>
-                      <Text style={styles.cellLabel}>SIGN / ZODIAC</Text>
-                      <Text style={styles.cellValue}>{identity.sign}</Text>
-                    </View>
+                  <View style={styles.tableRowFull}>
+                    <Text style={styles.cellLabel}>CHARACTERISTIC</Text>
+                    <Text style={styles.cellValue}>{identity.characteristic}</Text>
                   </View>
 
-                  <View style={styles.tableRowHalf}>
-                    <View style={[styles.tableCell, { flex: 1 }]}>
-                      <Text style={styles.cellLabel}>FAVORITE COLOR</Text>
-                      <Text style={styles.cellValue}>{identity.favoriteColor}</Text>
-                    </View>
-                    <View style={[styles.tableCell, { flex: 1, borderLeftWidth: 1, borderLeftColor: '#D8CEBE' }]}>
-                      <Text style={styles.cellLabel}>FAVORITE SERIES</Text>
-                      <Text style={styles.cellValue} numberOfLines={1}>{identity.favoriteSeries}</Text>
-                    </View>
+                  <View style={styles.tableRowFull}>
+                    <Text style={styles.cellLabel}>FAVORITE SERIES</Text>
+                    <Text style={styles.cellValue} numberOfLines={1}>{identity.favoriteSeries}</Text>
                   </View>
 
                   <View style={styles.tableRowFull}>
@@ -287,15 +280,54 @@ export default function ProfilePassportScreen() {
           <ScrollView contentContainerStyle={styles.editScrollContent}>
             <View style={styles.editCard}>
               <Text style={styles.editHeading}>แก้ไขข้อมูลพาสปอร์ตส่วนตัว ✍️</Text>
-              <Text style={styles.editSubheading}>ปรับแต่งข้อมูลตัวตนของคุณให้แสดงบน Designer Passport Card</Text>
+              <Text style={styles.editSubheading}>ปรับแต่งข้อมูลตัวตนและเลือกฟิลเตอร์รูปโปรไฟล์ของคุณ</Text>
 
-              {/* Photo Upload */}
+              {/* Photo Upload & Filter Selector */}
               <View style={styles.photoUploadSection}>
-                <Image source={{ uri: form.photoUri }} style={styles.previewUploadPhoto} />
+                <View style={{ position: 'relative' }}>
+                  <Image source={{ uri: form.photoUri }} style={styles.previewUploadPhoto} />
+                  {form.filterMode === 'grayscale' && <View style={styles.grayscaleOverlayCircle} />}
+                  {form.filterMode === 'vintage' && <View style={styles.vintageOverlayCircle} />}
+                </View>
+
                 <TouchableOpacity style={styles.btnChangePhoto} onPress={pickProfilePhoto} activeOpacity={0.8}>
                   <Feather name="camera" size={14} color="#4A1521" />
                   <Text style={styles.btnChangePhotoText}>เปลี่ยนรูปโปรไฟล์</Text>
                 </TouchableOpacity>
+
+                {/* Photo Filter Selection Pills */}
+                <Text style={styles.filterTitleLabel}>เลือกฟิลเตอร์รูปโปรไฟล์ (Photo Filter)</Text>
+                <View style={styles.filterPillRow}>
+                  <TouchableOpacity
+                    style={[styles.filterPill, form.filterMode === 'normal' && styles.filterPillActive]}
+                    onPress={() => setForm({ ...form, filterMode: 'normal' })}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.filterPillText, form.filterMode === 'normal' && styles.filterPillTextActive]}>
+                      📷 ปกติ (Normal)
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.filterPill, form.filterMode === 'grayscale' && styles.filterPillActive]}
+                    onPress={() => setForm({ ...form, filterMode: 'grayscale' })}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.filterPillText, form.filterMode === 'grayscale' && styles.filterPillTextActive]}>
+                      🎬 ขาวดำ (B&W)
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.filterPill, form.filterMode === 'vintage' && styles.filterPillActive]}
+                    onPress={() => setForm({ ...form, filterMode: 'vintage' })}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.filterPillText, form.filterMode === 'vintage' && styles.filterPillTextActive]}>
+                      🎞️ วินเทจ (Vintage)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Input Fields */}
@@ -307,12 +339,6 @@ export default function ProfilePassportScreen() {
 
               <Text style={styles.inputLabel}>บุคลิกภาพ / บุคลิกประจำตัว (CHARACTERISTIC)</Text>
               <TextInput style={styles.textInput} value={form.characteristic} onChangeText={(text) => setForm({ ...form, characteristic: text })} placeholder="เช่น Creative • Curious • Explorer" />
-
-              <Text style={styles.inputLabel}>ราศี / สัญลักษณ์ประจำตัว (SIGN)</Text>
-              <TextInput style={styles.textInput} value={form.sign} onChangeText={(text) => setForm({ ...form, sign: text })} placeholder="เช่น Virgo ♍" />
-
-              <Text style={styles.inputLabel}>สีประจำตัว / โทนสีโปรด (FAVORITE COLOR)</Text>
-              <TextInput style={styles.textInput} value={form.favoriteColor} onChangeText={(text) => setForm({ ...form, favoriteColor: text })} placeholder="เช่น #4B2E1F Coffee Brown" />
 
               <Text style={styles.inputLabel}>หนัง / ซีรีส์เรื่องโปรด (FAVORITE SERIES)</Text>
               <TextInput style={styles.textInput} value={form.favoriteSeries} onChangeText={(text) => setForm({ ...form, favoriteSeries: text })} placeholder="เช่น Emily in Paris" />
@@ -412,8 +438,31 @@ const styles = StyleSheet.create({
 
   // Top Card Elements
   topCardRow: { flexDirection: 'row', alignItems: 'center' },
-  photoFrameWrap: { width: 105, height: 125, borderRadius: 6, padding: 3, backgroundColor: '#EFE8DA', borderWidth: 1, borderColor: '#C0B3A0', position: 'relative' },
+  photoFrameWrap: { width: 105, height: 125, borderRadius: 6, padding: 3, backgroundColor: '#EFE8DA', borderWidth: 1, borderColor: '#C0B3A0', position: 'relative', overflow: 'hidden' },
   portraitPhoto: { width: '100%', height: '100%', borderRadius: 4, resizeMode: 'cover' },
+  
+  // Filter Overlay Effects for React Native Image
+  grayscaleOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(30,25,20,0.5)',
+    borderRadius: 4,
+  },
+  vintageOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(120, 80, 40, 0.35)',
+    borderRadius: 4,
+  },
+  grayscaleOverlayCircle: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(30,25,20,0.5)',
+    borderRadius: 45,
+  },
+  vintageOverlayCircle: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(120, 80, 40, 0.35)',
+    borderRadius: 45,
+  },
+
   officialInkStamp: {
     position: 'absolute',
     bottom: -10,
@@ -428,6 +477,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     transform: [{ rotate: '-18deg' }],
+    zIndex: 10,
   },
   stampInkText: { fontFamily: 'Inter_700Bold', fontSize: 7, color: '#7A1C29' },
   stampInkSub: { fontFamily: 'Inter_600SemiBold', fontSize: 6, color: '#7A1C29' },
@@ -444,7 +494,7 @@ const styles = StyleSheet.create({
 
   // Bottom Card Elements
   bottomCardHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  smallPhotoWrap: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#C0B3A0', overflow: 'hidden' },
+  smallPhotoWrap: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#C0B3A0', overflow: 'hidden', position: 'relative' },
   smallPortraitPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
   designerScriptTitleSmall: { fontFamily: 'CormorantGaramond_400Regular_Italic', fontSize: 22, color: '#3A271D', lineHeight: 24 },
   passportSubtextSmall: { fontFamily: 'Inter_600SemiBold', fontSize: 8, color: '#7A6B58', letterSpacing: 1 },
@@ -475,7 +525,15 @@ const styles = StyleSheet.create({
   previewUploadPhoto: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: '#7A1C29' },
   btnChangePhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: '#EAD9C0', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
   btnChangePhotoText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#4A1521' },
-  inputLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#5A4637', marginTop: 10, marginBottom: 4 },
+  
+  filterTitleLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#5A4637', marginTop: 14, marginBottom: 6 },
+  filterPillRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'center' },
+  filterPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: '#EAE1D2', borderWidth: 1, borderColor: '#D8CEBE' },
+  filterPillActive: { backgroundColor: '#7A1C29', borderColor: '#7A1C29' },
+  filterPillText: { fontFamily: 'Inter_500Medium', fontSize: 11, color: '#5A4637' },
+  filterPillTextActive: { fontFamily: 'Inter_600SemiBold', color: '#FFF' },
+
+  inputLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#5A4637', marginTop: 12, marginBottom: 4 },
   textInput: { backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#D8CEBE', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontFamily: 'Inter_400Regular', fontSize: 13, color: '#2B1E17' },
   textAreaInput: { height: 60, textAlignVertical: 'top' },
   btnSaveForm: { backgroundColor: '#7A1C29', paddingVertical: 14, borderRadius: 999, alignItems: 'center', marginTop: 20 },
