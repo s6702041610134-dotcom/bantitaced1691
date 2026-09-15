@@ -383,46 +383,30 @@ export default function MapScreen() {
     setReceiptNumber(newReceiptNo);
     setJourneyDate(new Date());
 
-    // 2. Fit map to coordinates so all markers & polylines are visible
-    if (mapRef.current && places.length > 0) {
-      mapRef.current.fitToCoordinates(
-        places.map((p) => p.coordinate),
-        {
-          edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
-          animated: false,
-        }
-      );
+    // 2. Combine all places and route coordinates to ensure long-distance routes are fully framed
+    const allCoords = [
+      ...places.map((p) => p.coordinate),
+      ...routeCoordinates,
+    ];
+
+    if (mapRef.current && allCoords.length > 0) {
+      mapRef.current.fitToCoordinates(allCoords, {
+        edgePadding: { top: 200, right: 70, bottom: 220, left: 70 },
+        animated: false,
+      });
     }
 
-    // 3. Short pause for map view tiles to render fitted bounds
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    // 3. Give MapView time to re-center, zoom out, and load map tiles for long distances
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     let snapshotUri: string | null = null;
 
-    // 4a. Capture rendered map screen via ViewShot (100% reliable on Apple Maps & Google Maps)
-    try {
-      if (mapContainerRef.current) {
-        const viewShotUri = await captureRef(mapContainerRef, {
-          format: 'png',
-          quality: 0.9,
-          result: 'tmpfile',
-        });
-        if (viewShotUri) {
-          snapshotUri = viewShotUri.startsWith('file://') || viewShotUri.startsWith('data:')
-            ? viewShotUri
-            : `file://${viewShotUri}`;
-        }
-      }
-    } catch (viewErr) {
-      console.log('captureRef error, trying native takeSnapshot:', viewErr);
-    }
-
-    // 4b. Native takeSnapshot fallback
-    if (!snapshotUri && mapRef.current) {
+    // 4a. Native takeSnapshot (produces 600x340 landscape image directly, matching receipt aspect ratio)
+    if (mapRef.current) {
       try {
         const snapshot = await mapRef.current.takeSnapshot({
           width: 600,
-          height: 320,
+          height: 340,
           format: 'png',
           quality: 0.9,
           result: 'file',
@@ -433,7 +417,25 @@ export default function MapScreen() {
             : `file://${snapshot}`;
         }
       } catch (err) {
-        console.log('File snapshot error:', err);
+        console.log('Native map takeSnapshot error:', err);
+      }
+    }
+
+    // 4b. Fallback: Capture rendered map screen via ViewShot
+    if (!snapshotUri && mapContainerRef.current) {
+      try {
+        const viewShotUri = await captureRef(mapContainerRef, {
+          format: 'png',
+          quality: 0.9,
+          result: 'tmpfile',
+        });
+        if (viewShotUri) {
+          snapshotUri = viewShotUri.startsWith('file://') || viewShotUri.startsWith('data:')
+            ? viewShotUri
+            : `file://${viewShotUri}`;
+        }
+      } catch (viewErr) {
+        console.log('captureRef error:', viewErr);
       }
     }
 
@@ -442,7 +444,7 @@ export default function MapScreen() {
       const avgLat = places.reduce((sum, p) => sum + p.coordinate.latitude, 0) / places.length;
       const avgLon = places.reduce((sum, p) => sum + p.coordinate.longitude, 0) / places.length;
       const markersParam = places.map((p) => `${p.coordinate.latitude},${p.coordinate.longitude},ol-marker`).join('|');
-      snapshotUri = `https://staticmap.openstreetmap.de/staticmap.php?center=${avgLat.toFixed(4)},${avgLon.toFixed(4)}&zoom=13&size=600x300&maptype=mapnik&markers=${markersParam}`;
+      snapshotUri = `https://staticmap.openstreetmap.de/staticmap.php?center=${avgLat.toFixed(4)},${avgLon.toFixed(4)}&zoom=10&size=600x340&maptype=mapnik&markers=${markersParam}`;
     }
 
     setMapSnapshotUri(snapshotUri);
