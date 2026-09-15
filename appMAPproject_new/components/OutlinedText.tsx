@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View, StyleSheet, TextStyle, TextProps } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { Colors } from '../constants/Colors';
 
 interface OutlinedTextProps extends TextProps {
   text: string;
