@@ -26,13 +26,13 @@ import * as Location from 'expo-location';
 import { captureRef } from 'react-native-view-shot';
 
 // Sub-services and components
-import { OYSTER_BAY_MAP_STYLE } from '../constants/MapStyle';
-import { fetchOSRMRoute, Coordinate } from '../services/routing';
-import { searchPlaces, reverseGeocode, SearchResult } from '../services/geocoding';
-import ReceiptModal from '../components/ReceiptModal';
+import { OYSTER_BAY_MAP_STYLE } from '../../constants/MapStyle';
+import { fetchOSRMRoute, Coordinate } from '../../services/routing';
+import { searchPlaces, reverseGeocode, SearchResult } from '../../services/geocoding';
+import ReceiptModal from '../../components/ReceiptModal';
 import { BlurView } from 'expo-blur';
-import { FrostedGlassCard } from '../components/FrostedGlass';
-import { fetchRealWeather, RealWeatherData } from '../services/weather';
+import { FrostedGlassCard } from '../../components/FrostedGlass';
+import { fetchRealWeather, RealWeatherData } from '../../services/weather';
 
 type PlaceItem = {
   id: string;

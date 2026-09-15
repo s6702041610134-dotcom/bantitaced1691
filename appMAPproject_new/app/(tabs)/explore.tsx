@@ -17,8 +17,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
-import { FrostedGlassCard, FrostedGlassButton } from '../components/FrostedGlass';
-import { OutlinedText } from '../components/OutlinedText';
+import { FrostedGlassCard, FrostedGlassButton } from '../../components/FrostedGlass';
+import { OutlinedText } from '../../components/OutlinedText';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';

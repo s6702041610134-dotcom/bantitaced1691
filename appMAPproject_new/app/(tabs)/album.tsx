@@ -19,8 +19,8 @@ import { Colors } from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
-import { FrostedGlassCard } from '../components/FrostedGlass';
-import { OutlinedText } from '../components/OutlinedText';
+import { FrostedGlassCard } from '../../components/FrostedGlass';
+import { OutlinedText } from '../../components/OutlinedText';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 40) / 7;

@@ -20,8 +20,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
-import { FrostedGlassCard, FrostedGlassButton } from '../components/FrostedGlass';
-import { OutlinedText } from '../components/OutlinedText';
+import { FrostedGlassCard, FrostedGlassButton } from '../../components/FrostedGlass';
+import { OutlinedText } from '../../components/OutlinedText';
 
 const { width } = Dimensions.get('window');
 

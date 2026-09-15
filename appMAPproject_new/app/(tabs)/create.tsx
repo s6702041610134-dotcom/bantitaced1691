@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ImageBackground, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
-import { FrostedGlassCard } from '../components/FrostedGlass';
+import { FrostedGlassCard } from '../../components/FrostedGlass';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 

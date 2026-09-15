@@ -13,8 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FrostedGlassCard } from '../components/FrostedGlass';
-import { OutlinedText } from '../components/OutlinedText';
+import { FrostedGlassCard } from '../../components/FrostedGlass';
+import { OutlinedText } from '../../components/OutlinedText';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 54) / 2;
