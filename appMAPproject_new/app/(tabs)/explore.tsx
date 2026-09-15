@@ -854,7 +854,7 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   backgroundImage: { flex: 1, width: '100%', height: '100%' },
-  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(202, 209, 131, 0.38)' },
+  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(250, 246, 240, 0.45)' },
   container: { flex: 1 },
 
   // Header
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   modalOverlayCenter: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
 
   // Detail Modal
-  detailModalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, height: '85%', padding: 0, backgroundColor: 'rgba(202, 209, 131, 0.97)' },
+  detailModalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, height: '85%', padding: 0, backgroundColor: 'rgba(250, 246, 240, 0.98)' },
   detailImageWrap: { position: 'relative', width: '100%', height: 220 },
   detailImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   modalCloseBtn: {
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
   detailAddTripBtnText: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#CAD183' },
 
   // Add Trip Modal
-  addTripModalCard: { borderRadius: 32, padding: 24, backgroundColor: 'rgba(202, 209, 131, 0.97)' },
+  addTripModalCard: { borderRadius: 32, padding: 24, backgroundColor: 'rgba(250, 246, 240, 0.98)' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(57, 29, 1, 0.1)' },
   modalHeaderTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, color: '#391D01' },
   targetPlaceName: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#391D01', marginBottom: 10 },
@@ -1153,7 +1153,7 @@ const styles = StyleSheet.create({
   confirmSmallText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#CAD183' },
 
   // Create Post Modal
-  createPostModalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, maxHeight: '90%', padding: 24, backgroundColor: 'rgba(202, 209, 131, 0.97)' },
+  createPostModalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, maxHeight: '90%', padding: 24, backgroundColor: 'rgba(250, 246, 240, 0.98)' },
   largePostImageWrap: { width: 140, height: 140, backgroundColor: 'rgba(186, 221, 127, 0.3)', padding: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(102, 2, 60, 0.15)', shadowColor: '#391D01', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
   largePostImage: { width: '100%', height: '100%', borderRadius: 14 },
   largePostImagePlaceholder: { width: 140, height: 140, backgroundColor: 'rgba(186, 221, 127, 0.4)', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(57, 29, 1, 0.1)' },

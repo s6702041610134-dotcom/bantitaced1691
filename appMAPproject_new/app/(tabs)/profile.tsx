@@ -346,7 +346,7 @@ export default function ProfilePassportScreen() {
 
 const styles = StyleSheet.create({
   backgroundImage: { flex: 1, width: '100%', height: '100%' },
-  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(202, 209, 131, 0.38)' },
+  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(250, 246, 240, 0.45)' },
   container: { flex: 1 },
 
   // Header Title
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
 
   // Edit Identity Form
   editScrollContent: { padding: 20, paddingBottom: 40 },
-  editCard: { padding: 20, borderRadius: 24, backgroundColor: 'rgba(202, 209, 131, 0.85)' },
+  editCard: { padding: 20, borderRadius: 24, backgroundColor: 'rgba(250, 246, 240, 0.92)' },
   editHeading: { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 22, color: '#391D01' },
   editSubheading: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#391D01', marginTop: 2, marginBottom: 16 },
   photoUploadSection: { alignItems: 'center', marginBottom: 16 },

@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(202, 209, 131, 0.35)',
+    backgroundColor: 'rgba(250, 246, 240, 0.45)',
   },
   container: {
     flex: 1,

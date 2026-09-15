@@ -1045,7 +1045,7 @@ export default function AlbumScreen() {
 
 const styles = StyleSheet.create({
   backgroundImage: { flex: 1, width: '100%', height: '100%' },
-  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(202, 209, 131, 0.38)' },
+  backgroundOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(250, 246, 240, 0.45)' },
   container: { flex: 1 },
 
   // Top Segment Bar
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
   bookBadgeText: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#fff' },
 
   // Opened Book View Modal
-  openedBookContainer: { flex: 1, backgroundColor: '#CAD183' },
+  openedBookContainer: { flex: 1, backgroundColor: '#FAF6F0' },
   openedBookNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1121,8 +1121,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(57, 29, 1, 0.14)',
-    backgroundColor: '#CAD183',
+    borderBottomColor: 'rgba(57, 29, 1, 0.1)',
+    backgroundColor: '#FAF6F0',
   },
   openedBookBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingRight: 4 },
   openedBookBackText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#391D01' },
@@ -1170,7 +1170,7 @@ const styles = StyleSheet.create({
 
   // Stamp Detail Preview Modal
   stampDetailModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  stampDetailCard: { width: '100%', backgroundColor: 'rgba(202, 209, 131, 0.97)', borderRadius: 28, padding: 24, alignItems: 'center', position: 'relative' },
+  stampDetailCard: { width: '100%', backgroundColor: 'rgba(250, 246, 240, 0.98)', borderRadius: 28, padding: 24, alignItems: 'center', position: 'relative' },
   modalCloseBtnAbs: { position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(57, 29, 1, 0.08)', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   stampDetailFrame: { width: '100%', height: 220, borderRadius: 16, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(57, 29, 1, 0.12)' },
   stampDetailPhoto: { width: '100%', height: '100%', resizeMode: 'cover' },
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
 
   // Modals General
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, width: '100%', maxHeight: '90%', padding: 24, paddingTop: 12, backgroundColor: '#CAD183' },
+  modalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, width: '100%', maxHeight: '90%', padding: 24, paddingTop: 12, backgroundColor: 'rgba(250, 246, 240, 0.98)' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(57, 29, 1, 0.12)', paddingBottom: 14 },
   modalTitle: { fontFamily: 'Inter_700Bold', fontSize: 19, color: '#391D01' },
   modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(57, 29, 1, 0.08)', alignItems: 'center', justifyContent: 'center' },
