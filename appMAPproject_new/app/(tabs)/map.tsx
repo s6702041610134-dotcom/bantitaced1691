@@ -401,8 +401,26 @@ export default function MapScreen() {
 
     let snapshotUri: string | null = null;
 
-    // 4a. Native takeSnapshot (produces 600x340 landscape image directly, matching receipt aspect ratio)
-    if (mapRef.current) {
+    // 4a. Capture rendered map screen via ViewShot (100% captures real rendered tiles & polylines on iOS Apple Maps & Google Maps)
+    try {
+      if (mapContainerRef.current) {
+        const viewShotUri = await captureRef(mapContainerRef, {
+          format: 'png',
+          quality: 0.9,
+          result: 'tmpfile',
+        });
+        if (viewShotUri) {
+          snapshotUri = viewShotUri.startsWith('file://') || viewShotUri.startsWith('data:')
+            ? viewShotUri
+            : `file://${viewShotUri}`;
+        }
+      }
+    } catch (viewErr) {
+      console.log('captureRef error, trying native takeSnapshot fallback:', viewErr);
+    }
+
+    // 4b. Native takeSnapshot fallback
+    if (!snapshotUri && mapRef.current) {
       try {
         const snapshot = await mapRef.current.takeSnapshot({
           width: 600,
@@ -418,24 +436,6 @@ export default function MapScreen() {
         }
       } catch (err) {
         console.log('Native map takeSnapshot error:', err);
-      }
-    }
-
-    // 4b. Fallback: Capture rendered map screen via ViewShot
-    if (!snapshotUri && mapContainerRef.current) {
-      try {
-        const viewShotUri = await captureRef(mapContainerRef, {
-          format: 'png',
-          quality: 0.9,
-          result: 'tmpfile',
-        });
-        if (viewShotUri) {
-          snapshotUri = viewShotUri.startsWith('file://') || viewShotUri.startsWith('data:')
-            ? viewShotUri
-            : `file://${viewShotUri}`;
-        }
-      } catch (viewErr) {
-        console.log('captureRef error:', viewErr);
       }
     }
 
