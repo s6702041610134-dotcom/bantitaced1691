@@ -58,7 +58,7 @@ export default function ReceiptModal({
       receiptOpacity.value = withTiming(1, { duration: 250 });
 
       // 2. Animate receipt paper feeding down (optimized for rich content)
-      receiptHeight.value = withTiming(610, {
+      receiptHeight.value = withTiming(680, {
         duration: 1500,
         easing: Easing.bezier(0.25, 1, 0.5, 1),
       });
@@ -193,7 +193,7 @@ export default function ReceiptModal({
                 <Image
                   source={{ uri: mapSnapshotUri }}
                   style={styles.rMiniMapImage}
-                  resizeMode="contain"
+                  resizeMode="cover"
                   fadeDuration={0}
                 />
               ) : (

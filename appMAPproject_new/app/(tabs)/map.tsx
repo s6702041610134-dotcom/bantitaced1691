@@ -391,7 +391,7 @@ export default function MapScreen() {
 
     if (mapRef.current && allCoords.length > 0) {
       mapRef.current.fitToCoordinates(allCoords, {
-        edgePadding: { top: 320, right: 80, bottom: 360, left: 80 },
+        edgePadding: { top: 100, right: 50, bottom: 120, left: 50 },
         animated: false,
       });
     }
