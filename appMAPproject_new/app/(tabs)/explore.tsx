@@ -203,6 +203,16 @@ export default function ExploreScreen() {
   const [newPostDesc, setNewPostDesc] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
 
+const CATEGORY_MAP: { [key: string]: string[] } = {
+  'All': [],
+  'Temple & Culture': ['วัด & วัฒนธรรม', 'Temple & Culture'],
+  'Cafe': ['คาเฟ่', 'Cafe'],
+  'Market & Street Food': ['ตลาด & สตรีทฟู้ด', 'Market & Street Food'],
+  'Shopping': ['ตลาด & ช้อปปิ้ง', 'ช้อปปิ้ง', 'Shopping'],
+  'Park': ['สวนสาธารณะ', 'Park'],
+  'Art & Museum': ['ศิลปะ & มิวเซียม', 'Art & Museum'],
+};
+
   // Filter Places (Smart Search: Searches across name, nameEn, district, category, description, and tips)
   const filteredPlaces = places.filter((item) => {
     const query = searchQuery.trim().toLowerCase();
@@ -217,11 +227,13 @@ export default function ExploreScreen() {
       item.description.toLowerCase().includes(query) ||
       item.tips.toLowerCase().includes(query);
 
-    // If searching text, search across ALL categories so user gets instant matches; otherwise filter by category chip
+    const allowedCategories = CATEGORY_MAP[selectedCategory] || [selectedCategory];
     const matchesCategory =
       query.length > 0
         ? true
-        : selectedCategory === 'All' || item.category === selectedCategory;
+        : selectedCategory === 'All'
+        ? true
+        : allowedCategories.includes(item.category) || item.category === selectedCategory;
 
     return matchesCategory && matchesSearch;
   });
@@ -385,22 +397,12 @@ export default function ExploreScreen() {
               clearButtonMode="while-editing"
             />
 
-            {searchQuery.length > 0 ? (
+            {searchQuery.length > 0 && (
               <TouchableOpacity
                 onPress={() => setSearchQuery('')}
                 style={styles.searchClearBtn}
               >
-                <Feather name="x-circle" size={18} color="rgba(75, 46, 31, 0.6)" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={styles.searchActionBadge}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  searchInputRef.current?.focus();
-                }}
-              >
-                <Text style={styles.searchActionBadgeText}>Search</Text>
+                <Feather name="x-circle" size={18} color="rgba(57, 29, 1, 0.6)" />
               </TouchableOpacity>
             )}
           </FrostedGlassCard>
