@@ -1,0 +1,13 @@
+<!-- TODO: replace with final speech-bubble artwork -->
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="130" viewBox="0 0 150 130" fill="none">
+  <path d="M14 20 H92 a8 8 0 0 1 8 8 v36 a8 8 0 0 1 -8 8 H42 l-16 14 v-14 H14 a8 8 0 0 1 -8 -8 V28 a8 8 0 0 1 8 -8 z"
+        fill="#9CC8C2" stroke="#5C8C86" stroke-width="1.5"/>
+  <circle cx="32" cy="46" r="3" fill="#284744"/>
+  <circle cx="50" cy="46" r="3" fill="#284744"/>
+  <circle cx="68" cy="46" r="3" fill="#284744"/>
+  <path d="M62 56 H136 a8 8 0 0 1 8 8 v32 a8 8 0 0 1 -8 8 H102 l-14 14 v-14 H62 a8 8 0 0 1 -8 -8 V64 a8 8 0 0 1 8 -8 z"
+        fill="#E6837A" stroke="#A14C45" stroke-width="1.5"/>
+  <circle cx="80" cy="80" r="3" fill="#5A1C17"/>
+  <circle cx="98" cy="80" r="3" fill="#5A1C17"/>
+  <circle cx="116" cy="80" r="3" fill="#5A1C17"/>
+</svg>

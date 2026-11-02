@@ -1,0 +1,12 @@
+<!-- TODO: replace with final notes/legal-pad artwork -->
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="160" viewBox="0 0 140 160" fill="none">
+  <rect x="10" y="14" width="118" height="138" rx="2" fill="#FFF6CC" stroke="#E0CE7B" stroke-width="1"/>
+  <line x1="22" y1="40" x2="116" y2="40" stroke="#C8B057" stroke-width="1"/>
+  <line x1="22" y1="56" x2="116" y2="56" stroke="#C8B057" stroke-width="1"/>
+  <line x1="22" y1="72" x2="116" y2="72" stroke="#C8B057" stroke-width="1"/>
+  <line x1="22" y1="88" x2="98" y2="88" stroke="#C8B057" stroke-width="1"/>
+  <line x1="22" y1="104" x2="116" y2="104" stroke="#C8B057" stroke-width="1"/>
+  <line x1="22" y1="120" x2="78" y2="120" stroke="#C8B057" stroke-width="1"/>
+  <circle cx="40" cy="14" r="9" fill="#D6534A" stroke="#9E322B" stroke-width="1"/>
+  <circle cx="40" cy="14" r="3" fill="#7A2018"/>
+</svg>

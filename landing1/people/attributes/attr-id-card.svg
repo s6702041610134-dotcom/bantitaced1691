@@ -1,0 +1,14 @@
+<!-- TODO: replace with final ID card artwork -->
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="110" viewBox="0 0 170 110" fill="none">
+  <rect x="6" y="6" width="158" height="98" rx="6" fill="#FFFFFF" stroke="#B5BCC4" stroke-width="1"/>
+  <rect x="6" y="6" width="158" height="14" rx="6" fill="#E2E6EA"/>
+  <text x="14" y="16" font-family="Helvetica, sans-serif" font-size="8" fill="#3D444C">Derrick Smith</text>
+  <rect x="14" y="32" width="50" height="60" rx="3" fill="#F2C2C8" stroke="#C18C92" stroke-width="0.5"/>
+  <circle cx="39" cy="56" r="14" fill="#E89AA4"/>
+  <text x="39" y="60" font-family="Georgia, serif" font-size="14" font-weight="700" fill="#6A2A33" text-anchor="middle">A</text>
+  <text x="76" y="44" font-family="Helvetica, sans-serif" font-size="10" font-weight="600" fill="#1F2429">Derrick Smith</text>
+  <text x="76" y="58" font-family="Helvetica, sans-serif" font-size="8" fill="#5A6168">Software Engineer</text>
+  <text x="76" y="74" font-family="Helvetica, sans-serif" font-size="7" fill="#5A6168">RB-FA0-A23</text>
+  <line x1="76" y1="80" x2="148" y2="80" stroke="#B5BCC4" stroke-width="0.5"/>
+  <text x="76" y="92" font-family="Helvetica, sans-serif" font-size="6" fill="#7A828A">Issued 2026</text>
+</svg>

@@ -1,0 +1,11 @@
+<!-- TODO: replace with final diploma artwork -->
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="130" viewBox="0 0 170 130" fill="none">
+  <rect x="6" y="6" width="158" height="118" rx="2" fill="#FBF6E8" stroke="#A48B5A" stroke-width="1.5"/>
+  <rect x="14" y="14" width="142" height="102" fill="none" stroke="#C8AC72" stroke-width="0.5" stroke-dasharray="4 3"/>
+  <text x="85" y="38" font-family="Georgia, serif" font-size="9" font-style="italic" fill="#7A5C28" text-anchor="middle">Esther Nina College</text>
+  <line x1="32" y1="50" x2="138" y2="50" stroke="#A48B5A" stroke-width="0.5"/>
+  <text x="85" y="76" font-family="Georgia, serif" font-size="14" font-weight="700" fill="#3F2C12" text-anchor="middle" font-style="italic">Derrick Smith</text>
+  <text x="85" y="92" font-family="Georgia, serif" font-size="7" fill="#7A5C28" text-anchor="middle">BACHELOR OF ARTS</text>
+  <circle cx="135" cy="106" r="8" fill="#D9B26A" stroke="#8A6322" stroke-width="0.5"/>
+  <path d="M135 100 L137 105 L142 105 L138 108 L139 113 L135 110 L131 113 L132 108 L128 105 L133 105 Z" fill="#FBF6E8"/>
+</svg>

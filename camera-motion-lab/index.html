@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAMERA MOTION LAB — Interactive Camera Movement Simulator</title>
+  <meta name="description" content="Learn camera placement and movement for storyboard and game design through interactive simulation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ═══════════════ TOP BAR ═══════════════ -->
+    <header class="topbar">
+      <div class="topbar__brand">
+        <span class="topbar__icon">🎬</span>
+        <h1 class="topbar__title">CAMERA MOTION LAB</h1>
+      </div>
+      <div class="topbar__info">
+        <span class="level-badge" id="levelBadge">Level 1</span>
+        <span class="topbar__mission-name" id="missionName">Mission 1 — The Walking Shot</span>
+      </div>
+      <div class="topbar__progress">
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-bar__segment filled" data-mission="0"></div>
+          <div class="progress-bar__segment" data-mission="1"></div>
+          <div class="progress-bar__segment" data-mission="2"></div>
+          <div class="progress-bar__segment" data-mission="3"></div>
+          <div class="progress-bar__segment" data-mission="4"></div>
+        </div>
+        <div class="stars-counter">
+          <span class="stars-counter__icon">⭐</span>
+          <span class="stars-counter__count" id="totalStars">0</span>
+          <span class="text-muted">/ 15</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════ LEFT PANEL ═══════════════ -->
+    <aside class="left-panel" id="leftPanel">
+      <div class="mission-card" id="missionCard">
+        <div class="mission-card__header">
+          <span class="mission-card__number" id="missionNumber">01</span>
+          <div class="mission-card__difficulty" id="missionDifficulty">
+            <span class="star filled">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+        </div>
+        <h2 class="mission-card__title" id="missionTitle">The Walking Shot</h2>
+        <blockquote class="mission-card__objective" id="missionObjective">
+          "Follow the character as they walk from left to right."
+        </blockquote>
+        <div class="mission-card__hint" id="missionHint">
+          <button class="hint-toggle" id="hintToggle">
+            <span>💡</span> Show Hint
+          </button>
+          <p class="hint-text hidden" id="hintText">
+            Think about how the camera should move to keep the character in frame.
+          </p>
+        </div>
+        <div class="mission-card__concept hidden" id="missionConcept">
+          <span class="concept-tag">Expected: Tracking / Truck</span>
+        </div>
+      </div>
+
+      <div class="mission-nav">
+        <button class="btn btn--ghost" id="btnPrevMission" disabled>
+          ← Previous
+        </button>
+        <button class="btn btn--ghost" id="btnNextMission">
+          Next →
+        </button>
+      </div>
+
+      <div class="mode-switcher">
+        <button class="btn btn--ghost mode-btn" id="btnMissionMode">
+          🎯 Missions
+        </button>
+        <button class="btn btn--ghost mode-btn" id="btnFreeMode">
+          🎨 Free Practice
+        </button>
+      </div>
+
+      <!-- Storyboard Strip -->
+      <div class="storyboard-section" id="storyboardSection">
+        <h3 class="section-title">📋 Storyboard</h3>
+        <div class="storyboard-strip" id="storyboardStrip">
+          <p class="text-muted text-center" id="storyboardEmpty">Complete missions to build your storyboard.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════ SCENE CONTAINER ═══════════════ -->
+    <main class="scene-container" id="sceneContainer">
+      <canvas id="sceneCanvas" width="960" height="540"></canvas>
+      <div class="viewfinder-corners">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+      </div>
+      <div class="scene-status" id="sceneStatus">
+        <span class="status-text" id="statusText">SETUP</span>
+      </div>
+    </main>
+
+    <!-- ═══════════════ RIGHT PANEL ═══════════════ -->
+    <aside class="right-panel" id="rightPanel">
+      <!-- Camera Position -->
+      <div class="control-section">
+        <h3 class="control-section__title">📐 Camera Position</h3>
+        <div class="control-group">
+          <label class="control-label">X <span class="text-mono control-value" id="valPosX">0.0</span></label>
+          <input type="range" class="slider-control" id="sliderPosX" min="-8" max="8" step="0.1" value="0">
+        </div>
+        <div class="control-group">
+          <label class="control-label">Y <span class="text-mono control-value" id="valPosY">1.6</span></label>
+          <input type="range" class="slider-control" id="sliderPosY" min="0.2" max="5" step="0.1" value="1.6">
+        </div>
+        <div class="control-group">
+          <label class="control-label">Z <span class="text-mono control-value" id="valPosZ">5.0</span></label>
+          <input type="range" class="slider-control" id="sliderPosZ" min="0.5" max="12" step="0.1" value="5">
+        </div>
+      </div>
+
+      <!-- Camera Rotation -->
+      <div class="control-section">
+        <h3 class="control-section__title">🔄 Camera Rotation</h3>
+        <div class="control-group">
+          <label class="control-label">Pan <span class="text-mono control-value" id="valPan">0°</span></label>
+          <input type="range" class="slider-control" id="sliderPan" min="-180" max="180" step="1" value="0">
+        </div>
+        <div class="control-group">
+          <label class="control-label">Tilt <span class="text-mono control-value" id="valTilt">0°</span></label>
+          <input type="range" class="slider-control" id="sliderTilt" min="-60" max="60" step="1" value="0">
+        </div>
+      </div>
+
+      <!-- Zoom / Focal Length -->
+      <div class="control-section">
+        <h3 class="control-section__title">🔍 Zoom</h3>
+        <div class="control-group">
+          <label class="control-label">Focal <span class="text-mono control-value" id="valZoom">35mm</span></label>
+          <input type="range" class="slider-control" id="sliderZoom" min="10" max="200" step="1" value="35">
+        </div>
+      </div>
+
+      <!-- Shot Size -->
+      <div class="control-section">
+        <h3 class="control-section__title">🎞️ Shot Size</h3>
+        <div class="radio-group" id="shotSizeGroup">
+          <button class="radio-pill" data-value="wide">Wide</button>
+          <button class="radio-pill active" data-value="medium">Medium</button>
+          <button class="radio-pill" data-value="closeup">Close-up</button>
+        </div>
+      </div>
+
+      <!-- Camera Angle -->
+      <div class="control-section">
+        <h3 class="control-section__title">📷 Camera Angle</h3>
+        <div class="radio-group" id="angleGroup">
+          <button class="radio-pill" data-value="high">High</button>
+          <button class="radio-pill active" data-value="eye">Eye Level</button>
+          <button class="radio-pill" data-value="low">Low</button>
+        </div>
+      </div>
+
+      <!-- Movement Type -->
+      <div class="control-section">
+        <h3 class="control-section__title">🎥 Movement Type</h3>
+        <div class="movement-selector" id="movementSelector">
+          <button class="movement-btn" data-movement="pan" title="Pan — Rotate left/right">
+            <span class="movement-icon">↔</span>
+            <span class="movement-name">Pan</span>
+          </button>
+          <button class="movement-btn" data-movement="tilt" title="Tilt — Rotate up/down">
+            <span class="movement-icon">↕</span>
+            <span class="movement-name">Tilt</span>
+          </button>
+          <button class="movement-btn" data-movement="dolly" title="Dolly — Move forward/backward">
+            <span class="movement-icon">⇄</span>
+            <span class="movement-name">Dolly</span>
+          </button>
+          <button class="movement-btn" data-movement="truck" title="Truck — Move left/right">
+            <span class="movement-icon">⇔</span>
+            <span class="movement-name">Truck</span>
+          </button>
+          <button class="movement-btn" data-movement="pedestal" title="Pedestal — Move up/down">
+            <span class="movement-icon">⇕</span>
+            <span class="movement-name">Pedestal</span>
+          </button>
+          <button class="movement-btn" data-movement="tracking" title="Tracking — Follow subject">
+            <span class="movement-icon">👁</span>
+            <span class="movement-name">Tracking</span>
+          </button>
+          <button class="movement-btn" data-movement="zoom" title="Zoom — Change focal length">
+            <span class="movement-icon">🔎</span>
+            <span class="movement-name">Zoom</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Speed Control -->
+      <div class="control-section">
+        <h3 class="control-section__title">⏱️ Speed</h3>
+        <div class="control-group">
+          <label class="control-label">
+            <span class="text-muted">0.25x</span>
+            <span class="text-mono control-value" id="valSpeed">1.0x</span>
+            <span class="text-muted">2.0x</span>
+          </label>
+          <input type="range" class="slider-control" id="sliderSpeed" min="0.25" max="2" step="0.25" value="1">
+        </div>
+      </div>
+
+      <!-- Duration -->
+      <div class="control-section">
+        <h3 class="control-section__title">⏳ Duration</h3>
+        <div class="control-group">
+          <label class="control-label">
+            <span class="text-muted">1s</span>
+            <span class="text-mono control-value" id="valDuration">3s</span>
+            <span class="text-muted">10s</span>
+          </label>
+          <input type="range" class="slider-control" id="sliderDuration" min="1" max="10" step="0.5" value="3">
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════ BOTTOM BAR ═══════════════ -->
+    <footer class="bottom-bar">
+      <div class="timeline" id="timeline">
+        <div class="timeline__track">
+          <div class="timeline__progress" id="timelineProgress" style="width: 0%"></div>
+          <div class="timeline__playhead" id="timelinePlayhead" style="left: 0%"></div>
+          <div class="timeline__keyframe timeline__keyframe--start hidden" id="keyframeStart" style="left: 0%"></div>
+          <div class="timeline__keyframe timeline__keyframe--end hidden" id="keyframeEnd" style="left: 100%"></div>
+        </div>
+        <div class="timeline__labels">
+          <span class="text-mono" id="timeLabel">0:00</span>
+          <span class="text-mono text-muted" id="durationLabel">/ 3:00</span>
+        </div>
+      </div>
+
+      <div class="transport-controls">
+        <button class="btn btn--icon btn-reset" id="btnReset" title="Reset">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 9 9"/><path d="M3 12V3"/><path d="M3 12H12"/></svg>
+        </button>
+        <button class="btn btn-rec" id="btnRec" title="Record Start Point">
+          <span class="rec-dot"></span>
+          <span class="rec-label">REC</span>
+        </button>
+        <button class="btn btn-play" id="btnPlay" title="Play" disabled>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+        <button class="btn btn-stop hidden" id="btnStop" title="Stop">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+      </div>
+
+      <div class="camera-path-mini" id="cameraPathMini">
+        <canvas id="pathCanvas" width="140" height="100"></canvas>
+        <span class="path-label text-mono">Top View</span>
+      </div>
+    </footer>
+
+    <!-- ═══════════════ FEEDBACK MODAL ═══════════════ -->
+    <div class="modal-overlay hidden" id="feedbackOverlay">
+      <div class="modal feedback-panel" id="feedbackPanel">
+        <div class="modal__header">
+          <h2 class="feedback-title" id="feedbackTitle">Shot Complete!</h2>
+          <div class="feedback-stars" id="feedbackStars">
+            <span class="star-large">★</span>
+            <span class="star-large">★</span>
+            <span class="star-large">★</span>
+          </div>
+        </div>
+        <div class="modal__body">
+          <div class="feedback-section" id="feedbackUsed">
+            <span class="feedback-icon">📷</span>
+            <div>
+              <h4>What Was Used</h4>
+              <p id="feedbackUsedText"></p>
+            </div>
+          </div>
+          <div class="feedback-section" id="feedbackHow">
+            <span class="feedback-icon">🎬</span>
+            <div>
+              <h4>How It Moved</h4>
+              <p id="feedbackHowText"></p>
+            </div>
+          </div>
+          <div class="feedback-section" id="feedbackEffect">
+            <span class="feedback-icon">👁</span>
+            <div>
+              <h4>Visual Effect</h4>
+              <p id="feedbackEffectText"></p>
+            </div>
+          </div>
+          <div class="feedback-section" id="feedbackWhen">
+            <span class="feedback-icon">💡</span>
+            <div>
+              <h4>When Useful</h4>
+              <p id="feedbackWhenText"></p>
+            </div>
+          </div>
+          <div class="feedback-section feedback-tips" id="feedbackTips">
+            <span class="feedback-icon">🎯</span>
+            <div>
+              <h4>Tips</h4>
+              <p id="feedbackTipsText"></p>
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--ghost" id="btnRetry">🔄 Try Again</button>
+          <button class="btn btn--primary" id="btnNextFromFeedback">Next Mission →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ MISSION BRIEFING MODAL ═══════════════ -->
+    <div class="modal-overlay hidden" id="briefingOverlay">
+      <div class="modal briefing-modal" id="briefingModal">
+        <div class="modal__header">
+          <span class="briefing-badge" id="briefingBadge">Mission 01</span>
+          <h2 id="briefingTitle">The Walking Shot</h2>
+        </div>
+        <div class="modal__body">
+          <blockquote class="briefing-objective" id="briefingObjective">
+            "Follow the character as they walk from left to right."
+          </blockquote>
+          <div class="briefing-workflow">
+            <h4>Your Workflow:</h4>
+            <ol>
+              <li>Read the mission objective above</li>
+              <li>Position your camera using the controls on the right</li>
+              <li>Press <strong>REC</strong> to mark the start point</li>
+              <li>Move the camera to create your shot</li>
+              <li>Press <strong>REC</strong> again to mark the end point</li>
+              <li>Press <strong>PLAY</strong> to preview</li>
+            </ol>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--primary" id="btnStartMission">Let's Go! 🎬</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ STORYBOARD VIEWER MODAL ═══════════════ -->
+    <div class="modal-overlay hidden" id="storyboardOverlay">
+      <div class="modal storyboard-viewer" id="storyboardViewer">
+        <div class="modal__header">
+          <h2>📋 Your Storyboard</h2>
+          <button class="btn btn--icon btn--ghost" id="btnCloseStoryboard">✕</button>
+        </div>
+        <div class="modal__body">
+          <div class="storyboard-grid" id="storyboardGrid"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Module Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Tilt Maze 3D",
+    "slug": "tilt-maze-3d",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tiltmaze",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0b0c1b",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bantitaced.tiltmaze3d",
+      "infoPlist": {
+        "NSMotionUsageDescription": "This app uses motion sensors to control the maze ball."
+      }
+    },
+    "android": {
+      "package": "com.bantitaced.tiltmaze3d"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
