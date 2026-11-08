@@ -46,5 +46,3 @@ example
 venv/
 .venv/
 
-# cloned sub-repos
-scan-ble/
